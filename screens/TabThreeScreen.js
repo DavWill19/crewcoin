@@ -1,12 +1,11 @@
 import { StyleSheet } from "react-native";
-
 import EditScreenInfo from "../components/EditScreenInfo";
 import { Text, View } from "../components/Themed";
 
-export default function TabTwoScreen() {
+export default function TabThreeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>News Feed</Text>
+      <Text style={styles.title}>Crew Coin Store</Text>
       <View
         style={styles.separator}
         lightColor="#eee"

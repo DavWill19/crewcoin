@@ -1,20 +1,16 @@
 import { StyleSheet } from "react-native";
+import { Text, View, Image } from "../components/Themed";
+import { Component } from "react";
 
-import EditScreenInfo from "../components/EditScreenInfo";
-import { Text, View } from "../components/Themed";
-
-export default function TabOneScreen() {
-  return (
+export default class TabOneScreen extends Component {
+  render() {
+    return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
-      <EditScreenInfo path="/screens/TabOneScreen.tsx" />
+      {/* <Image source={require("../assets/images/crewcoinlogo.png")} style={styles.logo} /> */}
+      <Text style={styles.title}>Welcome to CrewCoin</Text>
     </View>
-  );
+    );
+  }
 }
 
 const styles = StyleSheet.create({
