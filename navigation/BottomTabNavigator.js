@@ -9,6 +9,7 @@ import Colors from "../constants/Colors";
 import TabOneScreen from "../screens/TabOneScreen";
 import TabTwoScreen from "../screens/TabTwoScreen";
 import TabThreeScreen from "../screens/TabThreeScreen";
+import LoginScreen from "../screens/LoginScreen";
 
 const BottomTab = createBottomTabNavigator();
 
@@ -17,20 +18,33 @@ export default function BottomTabNavigator() {
 
   return (
     <BottomTab.Navigator
-      initialRouteName="Home"
-      screenOptions={{ tabBarActiveTintColor: Colors[colorScheme].tint }}
+      initialRouteName="Login"
+      screenOptions={{ style: { elevation: 20 }, headerShown: false, tabBarActiveTintColor: Colors[colorScheme].tint }}
     >
-      <BottomTab.Screen
-        name="Home"
-        component={TabOneNavigator}
+    <BottomTab.Screen
+        
+        name="Login"
+        screenOptions={{ headerShown: false }}
+        component={LoginNavigator}
         options={{
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="home" color={color} />
+            <TabBarIcon name="cash-outline" color={color} />
           ),
         }}
       />
       <BottomTab.Screen
-        name="News Feed"
+        name="Balance"
+        screenOptions={{ headerShown: false }}
+        component={TabOneNavigator}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="cash-outline" color={color} />
+          ),
+        }}
+      />
+      <BottomTab.Screen
+        name="Announcements"
+        screenOptions={{ headerShown: false }}
         component={TabTwoNavigator}
         options={{
           tabBarIcon: ({ color }) => (
@@ -38,8 +52,9 @@ export default function BottomTabNavigator() {
           ),
         }}
       />
-       <BottomTab.Screen
+      <BottomTab.Screen
         name="Store"
+        screenOptions={{ headerShown: false }}
         component={TabThreeNavigator}
         options={{
           tabBarIcon: ({ color }) => (
@@ -65,13 +80,16 @@ function TabOneNavigator() {
   return (
     <TabOneStack.Navigator screenOptions={{ headerShown: false }}>
       <TabOneStack.Screen
-        name="Home"
+        name="Balance"
         component={TabOneScreen}
-        options={{ headerTitle: "Welcome to Crew Coin" }}
-         screenOptions={{ headerShown: false }}
+        options={{
+
+          headerShown: false,
+          header: null,
+        }}
       />
     </TabOneStack.Navigator>
-    
+
   );
 }
 
@@ -81,9 +99,9 @@ function TabTwoNavigator() {
   return (
     <TabTwoStack.Navigator screenOptions={{ headerShown: false }}>
       <TabTwoStack.Screen
-        name="News Feed"
+        name="Announcements"
         component={TabTwoScreen}
-        options={{ headerTitle: "News Feed" }}
+        options={{ headerTitle: "Announcements" }}
       />
     </TabTwoStack.Navigator>
   );
@@ -100,5 +118,18 @@ function TabThreeNavigator() {
         options={{ headerTitle: "Store" }}
       />
     </TabThreeStack.Navigator>
+  );
+}
+const TabFourStack = createStackNavigator(); 
+
+function LoginNavigator() {
+  return (
+    <TabFourStack.Navigator screenOptions={{ headerShown: false }}>
+      <TabFourStack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerTitle: "Login" }}
+      />
+    </TabFourStack.Navigator>
   );
 }
