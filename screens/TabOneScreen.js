@@ -4,42 +4,43 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeBaseProvider, View, Stack, Box, Container, Heading, Divider, IconButton, Flex, HStack, Text, Icon, VStack, Center, StatusBar, Button, List, ListItem, Left, } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { style } from "dom-helpers";
-import { Component } from "react";
+import { Component, useContext } from "react";
+import { useState } from "react";
+import { UserContext } from "./UserContext";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 
-export default class TabOneScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      dataSource: null,
-    }
-    this.onPressButton = this.onPressButton.bind(this);
-  }
 
-  render() {
-    const { navigate } = this.props.navigation;
-    return (
-      <NativeBaseProvider>
-        <AppBar />
-        <Divider />
-        <ImageBackground  style={styles.image} source={require('../assets/images/bgblue.png')} resizeMode="cover" >
+
+export default function TabOneScreen({ route, navigation }) {
+
+  const { value, setValue } = useContext(UserContext);
+  console.log({ value });
+  return (
+    <NativeBaseProvider>
+      {AppBar(value)}
+      <Divider />
+      <ImageBackground  style={styles.image} source={require('../assets/images/bgblue.png')} resizeMode="cover" >
+      <Stack>
         <Image shadow={3} style={styles.topper} source={require('../assets/images/crewcoinwhite.png')} resizeMode="contain" />
-        <View shadow={8} style={styles.creditcard} borderColor="black" >
-            <Text style={styles.text}>David Williams</Text>
-            <Text style={styles.text2}>Wenventure Inc.</Text>
-            <Image style={styles.creditlogo} source={require('../assets/images/creditcardlogo.png')} />
-            <View>
-              <Image style={styles.credit} source={require('../assets/images/crewcoincredit.png')} />
-            </View>
+      </Stack>
+      <Stack shadow={8}>
+        <View onPress={() => { navigation.navigate('Store') }} shadow={8} style={styles.creditcard} borderColor="black" >
+          <Text style={styles.text}>{value.firstname + " " + value.lastname}</Text>
+          <Text style={styles.text2}>{value.organization}</Text>
+          <Image style={styles.creditlogo} source={require('../assets/images/creditcardlogo.png')} />
+          <View>
+            <Image style={styles.credit} source={require('../assets/images/crewcoincredit.png')} />
           </View>
-        <Center style={{marginTop: 30}}>
-        <Stack borderColor="#b2c2d1"
+        </View>
+      </Stack>
+        <Center style={{ marginTop: 23 }}>
+          <Stack borderColor="#b2c2d1"
             borderWidth={1}
-            style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)'}}
+            style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)' }}
             px={2}
             py={2}
-            mt={230}
+            mt={235}
             mb={-3}
             borderRadius={5}
             shadow={9}
@@ -64,14 +65,16 @@ export default class TabOneScreen extends Component {
                 backgroundColor: "lightBlue.500",
               }}
             >
-              <Box>
+              <Box >
               </Box>
-              <HStack  px="4" space={2}>
-                <Ionicons name="md-wallet" size={30} color="black" />
-                <Heading color="black" size="lg" mx="auto" my="auto">
-                  Transaction History
-                </Heading>
-              </HStack>
+              <TouchableOpacity onPress={() => { navigation.navigate('History') }}>
+                <HStack px="4" space={2}>
+                  <Ionicons name="md-wallet" size={30} color="black" />
+                  <Heading color="black" size="lg" mx="auto" my="auto">
+                    Transaction History
+                  </Heading>
+                </HStack>
+              </TouchableOpacity>
             </Box>
             <Box
               shadow={3}
@@ -92,14 +95,16 @@ export default class TabOneScreen extends Component {
                 backgroundColor: "lightBlue.500",
               }}
             >
-              <Box>
+              <Box >
               </Box>
-              <HStack  px="4" space={2}>
-                <Ionicons name="md-arrow-redo-circle" size={30} color="black" />
-                <Heading color="black" size="lg" mx="auto" my="auto">
-                  Send Crew Coins
-                </Heading>
-              </HStack>
+              <TouchableOpacity onPress={() => { navigation.navigate('Send') }}>
+                <HStack px="4" space={2} >
+                  <Ionicons name="md-arrow-redo-circle" size={30} color="black" />
+                  <Heading color="black" size="lg" mx="auto" my="auto">
+                    Send Crew Coins
+                  </Heading>
+                </HStack>
+              </TouchableOpacity>
             </Box>
             <Box
               shadow={3}
@@ -122,33 +127,32 @@ export default class TabOneScreen extends Component {
             >
               <Box>
               </Box>
-              <HStack space={2} px="4">
-                <Ionicons name="settings" size={30} color="black" />
-                <Heading color="black" size="lg" mx="auto" my="auto">
-                  Account Settings
-                </Heading>
-              </HStack>
+              <TouchableOpacity onPress={() => { navigation.navigate('Settings') }}>
+                <HStack space={2} px="4">
+                  <Ionicons name="settings" size={30} color="black" />
+                  <Heading color="black" size="lg" mx="auto" my="auto">
+                    Account Settings
+                  </Heading>
+                </HStack>
+              </TouchableOpacity>
             </Box>
           </Stack>
-          </Center>
-          <Heading size="xl" color="black" mt={5}>Balance:</Heading>         
-              <HStack shadow={3} style={styles.button}>
-               <Image style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
-               <Text shadow={1} style={{color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: "32%", }}>20</Text>
-              </HStack>
+        </Center>
 
-        </ImageBackground>
-      </NativeBaseProvider>
-    );
-  }
-  onPressButton() {
-    this.props.navigation.navigate('Store');
-  }
+        <Heading size="xl" color="black" mt={5}>Balance:</Heading>
+        <HStack  shadow={3} style={styles.button}>
+          <Image style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
+          <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: "35%", }}>{value.balance}</Text>
+        </HStack>
+
+      </ImageBackground>
+    </NativeBaseProvider>
+  );
 }
-function AppBar() {
+function AppBar(value) {
   return (
     <>
-      <Box safeAreaTop backgroundColor="#d9d9d9" />
+      <Box safeAreaTop backgroundColor="#f2f2f2" />
 
       <HStack bg='#f2f2f2' px="1" justifyContent='space-between' alignItems='center'>
         <HStack space="4" alignItems='center'>
@@ -156,7 +160,7 @@ function AppBar() {
         </HStack>
         <HStack space="4">
           <Text px="1" style={styles.icon}>
-            David Williams
+            {value.firstname + " " + value.lastname}
           </Text>
         </HStack>
       </HStack>
@@ -175,8 +179,9 @@ const styles = StyleSheet.create({
     width: 370,
     resizeMode: 'contain',
     position: 'relative',
-    marginTop: "25%",
-    marginBottom: "1%",
+    marginTop: "-11%",
+    marginBottom: "-25%",
+
   },
   button: {
     backgroundColor: '#ffcc00',
@@ -189,18 +194,19 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
     width: "32%",
-    height: "15%",
+    height: "12%",
     marginTop: "1%",
     resizeMode: 'contain',
-    marginBottom: "2%",
+    marginBottom: "10%",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   creditcard: {
     position: 'relative',
     width: 350,
     resizeMode: 'contain',
-    marginTop: -100,
     marginBottom: "2%",
-    
+
   },
 
   heading: {
@@ -216,14 +222,6 @@ const styles = StyleSheet.create({
     marginTop: -30,
     marginLeft: -30,
 
-  },
-  bg: {
-    position: 'absolute',
-    bottom: 0,
-    zIndex: -5,
-    width: '100%',
-    height: '50%',
-    opacity: 0.8,
   },
   icon: {
     color: 'black',
@@ -321,10 +319,9 @@ const styles = StyleSheet.create({
     width: "29%",
     height: "80%",
     resizeMode: 'contain',
-    marginLeft: "13%",
-    marginTop: "5%",
+
+    marginTop: "6%",
     marginRight: "-2%",
-    paddingBottom: "15%",
   },
   coingif: {
     size: '90%',
@@ -341,14 +338,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: '100%',
     height: '100%',
-    marginBottom: 170,
-  },
-  title: {
-    width: 400,
-    resizeMode: 'cover',
-    marginTop: -100,
-    marginBottom: -100,
-    margin: -100,
   },
   header: {
     marginTop: '15%',

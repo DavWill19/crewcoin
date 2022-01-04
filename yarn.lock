@@ -5782,6 +5782,26 @@ expo-font@~10.0.3:
     expo-modules-core "~0.4.4"
     fontfaceobserver "^2.1.0"
 
+expo-image-loader@~3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-3.1.0.tgz#d60d57d6d36d1ea9b07ed2e8bed87574edd2ad1e"
+  integrity sha512-86oT25SDTO018hWO61HGnoB4l+DEgT9sOoW24rvXX99VBe/MPheGo+DDNKtLNf6k06n/OFL3LgtR0m9YpOCT8Q==
+
+expo-image-manipulator@^10.2.0:
+  version "10.2.0"
+  resolved "https://registry.yarnpkg.com/expo-image-manipulator/-/expo-image-manipulator-10.2.0.tgz#f575a03a85ca954f4aae5be1c7e02fcd30216500"
+  integrity sha512-yq4vtE1Xbs39ertKx0sN1cXKPu3or9mJMvEu2QhdDCop13gXufK5bJ6V+dFMz+x4zESt56eM8uIAghDobWJjpQ==
+  dependencies:
+    expo-image-loader "~3.1.0"
+
+expo-image-picker@^12.0.1:
+  version "12.0.1"
+  resolved "https://registry.yarnpkg.com/expo-image-picker/-/expo-image-picker-12.0.1.tgz#2d46648b82422124f53a0aa6c186c4035ad31e8d"
+  integrity sha512-0utJK87zQH9jeOKlK51x/AXg43msef8qY+oib7TR12jVa6uuPmO8TcMgzr1UZ7DIsxlkMRId/cvBWzMu2BnJcg==
+  dependencies:
+    "@expo/config-plugins" "^4.0.2"
+    uuid "7.0.2"
+
 expo-keep-awake@~10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/expo-keep-awake/-/expo-keep-awake-10.0.0.tgz#275a3e02f99bc0429790047add126c1dcce60d63"
@@ -5804,6 +5824,13 @@ expo-linking@~2.4.2:
     qs "^6.5.0"
     url-parse "^1.4.4"
 
+expo-media-library@^14.0.0:
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/expo-media-library/-/expo-media-library-14.0.0.tgz#aed008f7b750c02ec4a298c7aaa2fc4454171eea"
+  integrity sha512-rbrFSLxpmhKqvWivjpMXhAOu0D0sRhu2UNc+SJntXJwsLYx7Mzh9N8pk2kU7iLTPR2YYfxOGW7HyFj18+OB6QQ==
+  dependencies:
+    "@expo/config-plugins" "^4.0.2"
+
 expo-modules-autolinking@~0.3.4:
   version "0.3.4"
   resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-0.3.4.tgz#25ce32ca933fedab2a5eb139e91327d123aa6066"
@@ -5822,6 +5849,11 @@ expo-modules-core@~0.4.4, expo-modules-core@~0.4.7, expo-modules-core@~0.4.8:
   dependencies:
     compare-versions "^3.4.0"
     invariant "^2.2.4"
+
+expo-permissions@^13.1.0:
+  version "13.1.0"
+  resolved "https://registry.yarnpkg.com/expo-permissions/-/expo-permissions-13.1.0.tgz#1be8fe01476950d642ea83d383fd8912492434b9"
+  integrity sha512-f3ngERaoeAw8236xyvw4gS89Fxd4fU2soKXQn0JPXwiDGmIXO+lIJNH3psNvAebj4DfmyQtGW4AS1itG83GHaQ==
 
 expo-pwa@0.0.102:
   version "0.0.102"
@@ -9068,6 +9100,11 @@ mockdate@^3.0.2:
   resolved "https://registry.yarnpkg.com/mockdate/-/mockdate-3.0.5.tgz#789be686deb3149e7df2b663d2bc4392bc3284fb"
   integrity sha512-iniQP4rj1FhBdBYS/+eQv7j1tadJ9lJtdzgOpvsOHng/GbcDh2Fhdeq+ZRldrPYdXvCyfFUmFeEwEGXZB5I/AQ==
 
+moment@^2.29.1:
+  version "2.29.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
+
 move-concurrently@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/move-concurrently/-/move-concurrently-1.0.1.tgz#be2c005fda32e0b29af1f05d7c4b33214c701f92"
@@ -10637,7 +10674,7 @@ prompts@^2.3.2, prompts@^2.4.0:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@^15.6.0, prop-types@^15.7.2:
+prop-types@^15.6.0, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -10926,6 +10963,14 @@ react-native-codegen@^0.0.6:
     jscodeshift "^0.11.0"
     nullthrows "^1.1.1"
 
+react-native-counters@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-counters/-/react-native-counters-1.2.0.tgz#1848125ff27774a1e6dc32ba8a5738c452a1eb47"
+  integrity sha512-KFcpyopqFXOb2iw1qbVJRbxmJStK8jcf/zlEJ/PAy6sV4M82xGImRFy+Y1jqdm6Eherg34LR2ay4KYoA3wB/8g==
+  dependencies:
+    prop-types "^15.6.2"
+    react-native-text "^1.0.8"
+
 react-native-gesture-handler@~1.10.2:
   version "1.10.3"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-1.10.3.tgz#942bbf2963bbf49fa79593600ee9d7b5dab3cfc0"
@@ -10983,6 +11028,11 @@ react-native-svg@12.1.1:
   dependencies:
     css-select "^2.1.0"
     css-tree "^1.0.0-alpha.39"
+
+react-native-text@^1.0.8:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/react-native-text/-/react-native-text-1.2.2.tgz#26f398e19522be160500de57e8e98ad177a1f6e5"
+  integrity sha512-pw6qY88hH5EXhnBzkN4KuRVdpjc0TZtL94/0oznDSXdowTf8Lrqsxg8LTlSrypBWNiWa8++6zfDz6dEfbHw45A==
 
 react-native-vector-icons@~2.1.0:
   version "2.1.0"
@@ -13061,6 +13111,11 @@ uuid@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.0.0.tgz#6728fc0459c450d796a99c31837569bdf672d728"
   integrity sha1-Zyj8BFnEUNeWqZwxg3VpvfZy1yg=
+
+uuid@7.0.2:
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-7.0.2.tgz#7ff5c203467e91f5e0d85cfcbaaf7d2ebbca9be6"
+  integrity sha512-vy9V/+pKG+5ZTYKf+VcphF5Oc6EFiu3W8Nv3P3zIh0EqVI80ZxOzuPfe9EHjkFNvf8+xuTHVeei4Drydlx4zjw==
 
 uuid@^3.1.0, uuid@^3.3.2, uuid@^3.4.0:
   version "3.4.0"

@@ -3,6 +3,9 @@ import { NativeBaseProvider, Box, Container, Heading, Divider, AspectRatio, Stac
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, ScrollView } from "react-native-gesture-handler";
 import prizes from './sample';
+import { Component, useContext } from "react";
+import { useState } from "react";
+import { UserContext } from "./UserContext";
 
 
 
@@ -22,17 +25,19 @@ export default function TabThreeScreen() {
   );
 }
 function AppBar() {
+  const { value, setValue } = useContext(UserContext);
   return (
     <>
       <Box safeAreaTop backgroundColor="#f2f2f2" />
 
-      <HStack bg='#ffcc00' px="1" justifyContent='space-between' alignItems='center'>
+      <HStack bg='amber.300' px="1" justifyContent='space-between' alignItems='center' borderColor="gray.300"
+                borderWidth="1">
         <HStack space="4" alignItems='center'>
           <Image style={styles.coin} source={require('../assets/images/crewcoinlogo.png')} />
         </HStack>
         <HStack space="4">
           <Text px="1" style={styles.icon}>
-            David Williams
+            {value.firstname + " " + value.lastname}
           </Text>
         </HStack>
       </HStack>
@@ -42,13 +47,15 @@ function AppBar() {
 }
 
 function CardBalance() {
+  const { value, setValue } = useContext(UserContext);
   return (
     <>
-      <VStack borderWidth="1" borderColor="gray.300" space="4" bg='#ffcc00' px="2" justifyContent='space-between' alignItems='center'>
+      <VStack borderColor="gray.300"
+                borderWidth="1" space="4" bg='amber.300' px="2" justifyContent='space-between' alignItems='center'>
         <Center>
           <HStack >
             <Image style={styles.coinbalance} source={require('../assets/images/coinbalance.png')} />
-            <Text style={styles.icon2}>20</Text>
+            <Text style={styles.icon2}>{value.balance}</Text>
           </HStack>
         </Center>
       </VStack>
@@ -82,7 +89,7 @@ export const Example = () => {
           }}
         >
           <Box >
-            <AspectRatio w="60%" ratio={7 / 7}>
+            <AspectRatio w="58%" ratio={7 / 7}>
               <Image
                 source={{
                   uri: `${prize.img}`,
@@ -91,7 +98,7 @@ export const Example = () => {
               />
             </AspectRatio>
           </Box>
-          <Stack space={3}>
+          <Stack >
             <Stack py="2" space={2}>
               <Heading size="md" ml="-1">
                 {prize.name}
