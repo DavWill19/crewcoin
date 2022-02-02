@@ -1,30 +1,33 @@
-import { StyleSheet, ImageBackground, Image } from "react-native";
-import { NativeBaseProvider, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
+import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView } from "react-native";
+import { NativeBaseProvider, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView } from "react-native-gesture-handler";
 import posts from './sample2';
 import { useNavigation } from '@react-navigation/native';
 import { Component, useContext } from "react";
 import { useState } from "react";
 import { UserContext } from "./UserContext";
 import moment from "moment";
+import { toggleClass } from "dom-helpers";
 
-export default function SettingsScreen({ route, navigation }) {
+
+export default function SettingsScreen() {
     const { value, setValue } = useContext(UserContext);
+    const { navigation } = useNavigation();
+
     return (
         <NativeBaseProvider>
-            <AppBar />
-            <ImageBackground imageStyle=
-        {{ opacity: 0.7 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
-            <ScrollView >
-
-                <Divider />
-                <Center>
-                    {Example(value)}
-                </Center>
-
+            <ScrollView>
+                <AppBar />
+                <ImageBackground imageStyle=
+                    {{ opacity: 0.7 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+                    <Divider />
+                    <Center>
+                        <KeyboardAvoidingView behavior="position" >
+                            {Example(value)}
+                        </KeyboardAvoidingView>
+                    </Center>
+                </ImageBackground>
             </ScrollView>
-            </ImageBackground>
         </NativeBaseProvider>
     );
 }
@@ -37,7 +40,7 @@ function AppBar() {
             <HStack bg='amber.300' px="1" alignItems='center' borderColor="gray.300"
                 borderWidth="1">
                 <HStack space="4" alignItems='center'>
-                    <Ionicons name="md-chevron-back-sharp" size={24} color="black" onPress={() => { navigation.navigate('Balance'); }} />
+                    <Ionicons name="md-chevron-back-sharp" size={24} color="black" onPress={() => { navigation.navigate('Wallet'); }} />
                 </HStack>
 
 
@@ -50,6 +53,89 @@ function AppBar() {
 }
 
 export const Example = (value) => {
+    const navigation = useNavigation();
+    const [formData, setData] = useState({});
+    const [show, setShow] = useState(false);
+
+
+
+    function passwordForm(show) {
+        if (show)
+            return (
+                <>
+                    <Divider mt="5" />
+                    <Text mt="5">New Password</Text>
+                    <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, newPassword: value })} />
+                    <Text>Confirm Password</Text>
+                    <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, confirmPassword: value })} />
+
+                    <Button m="3" onPress={() => {
+                        if (formData.newPassword && formData.confirmPassword) {
+                            if (formData.newPassword === formData.confirmPassword && formData.newPassword.length > 7 && /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(formData.newPassword)) {
+                                passwordChange(formData.newPassword);
+                            } else {
+                                Alert.alert(
+                                    "Passwords must match",
+                                    "Password Must be at least 8 characters long and contain at least one number and one special character",
+                                    [
+                                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                                    ]
+                                );
+                            }
+                        }
+                    }}
+                    >Submit</Button>
+                    <Divider />
+                </>
+            )
+
+    }
+    function passwordChange(password) {
+        fetch(`https://crewcoin.herokuapp.com/crewuser/passchange/${value.username}`, {
+            method: "PUT",
+            headers: {
+                authorization: "jwt",
+                credentials: "same-origin",
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                mode: "cors"
+            },
+            body: JSON.stringify({
+                "password": password
+            }),
+        })
+
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    console.log("success");
+                    Alert.alert(
+                        "Password Changed",
+                        "Your password has been changed",
+                        [
+                            { text: "OK", onPress: () => console.log("OK Pressed") }
+                        ]
+                    );
+                } else {
+                    console.log("fail");
+                    Alert.alert(
+                        "Password Change Failed",
+                        "Your password could not be changed",
+                        [
+                            { text: "OK", onPress: () => console.log("OK Pressed") }
+                        ]
+                    );
+                }
+            })
+            .catch(err => {
+                console.log(err)
+            }
+            );
+    }
+    function toggleShow() {
+        setShow(!show);
+    }
+
     return (
         <>
             <Box
@@ -79,7 +165,7 @@ export const Example = (value) => {
                 }}
             >
                 <Stack w="350" p="6" space={3}>
-                    <Center mb="5" backgroundColor= "amber.200" borderTopRadius="10" borderBottomRadius="10">
+                    <Center mb="5" backgroundColor="amber.200" borderTopRadius="10" borderBottomRadius="10">
                         <Heading p="1" textAlign="center" size="xl" ml="-1">
                             My Account
                         </Heading>
@@ -108,7 +194,7 @@ export const Example = (value) => {
                             Phone:
                         </Heading>
                         <Heading size="sm" >
-                        {value.phone}
+                            {value.phone}
                         </Heading>
                     </HStack>
                     <Divider />
@@ -117,7 +203,7 @@ export const Example = (value) => {
                             Organization:
                         </Heading>
                         <Heading size="sm" >
-                        {value.organization}
+                            {value.organization}
                         </Heading>
                     </HStack>
                     <Divider />
@@ -126,7 +212,7 @@ export const Example = (value) => {
                             Member Since:
                         </Heading>
                         <Heading size="sm" >
-                        {moment(value.joined).format("MM/DD/YYYY")}
+                            {moment(value.joined).format("MM/DD/YYYY")}
                         </Heading>
                     </HStack>
                     <Divider />
@@ -135,7 +221,7 @@ export const Example = (value) => {
                             Portal ID:
                         </Heading>
                         <Heading size="sm" >
-                        {value.portalId}
+                            {value.portalId}
                         </Heading>
                     </HStack>
                     <Divider />
@@ -144,14 +230,16 @@ export const Example = (value) => {
                             Account Balance:
                         </Heading>
                         <Heading size="md" >
-                        {value.balance}
+                            {value.balance}
                         </Heading>
                     </HStack>
                     <Divider />
                 </Stack>
                 <Center mt="5%">
-                <Button shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.400"><Heading>Change Password</Heading></Button>
-            </Center>
+                    <Button shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { toggleShow(show, setShow) }}><Heading>Change Password</Heading></Button>
+                    {passwordForm(show)}
+                    <Button shadow={2} mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { navigation.navigate('Login') }}><Heading>Log Out</Heading></Button>
+                </Center>
             </Box>
         </>
 

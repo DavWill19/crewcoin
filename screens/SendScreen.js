@@ -1,4 +1,4 @@
-import { StyleSheet, ImageBackground, Image, View, Alert } from "react-native";
+import { StyleSheet, ImageBackground, Image, View, Alert, TouchableOpacity } from "react-native";
 import { NativeBaseProvider, Box, Container, Heading, Divider, AspectRatio, Stack, HStack, Text, Icon, VStack, Center, StatusBar, Button, Input } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, ScrollView } from "react-native-gesture-handler";
@@ -8,26 +8,41 @@ import { useNavigation } from '@react-navigation/native';
 import { Component, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import React from "react";
-import { ReloadInstructions } from "react-native/Libraries/NewAppScreen";
-import { set } from "react-native-reanimated";
-
-
 
 export default function SendScreen() {
+    const [formData, setData] = React.useState({});
+    const { value, setValue } = useContext(UserContext);
+    function admin() {
+        if (value.admin) {
+            return (
+                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingTop: 10 }}>
+                    <Ionicons name="md-trash-sharp" size={16} color="gray" />
+                    <Text style={{ marginLeft: 5, fontSize: 16, fontWeight: 'bold', color: 'gray' }}>Long Press Any User to Delete</Text>
+                </View>
+            )
+        } else {
+            return (
+                null
+            )
+        }
+    }
 
     return (
         <NativeBaseProvider>
             <AppBar />
             <ImageBackground imageStyle=
                 {{ opacity: 0.2 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+
                 <ScrollView>
                     <CoinShow prizes={prizes} />
+                    {admin()}
                 </ScrollView>
             </ImageBackground>
             <CardBalance />
         </NativeBaseProvider>
     );
 }
+
 function AppBar() {
     const navigation = useNavigation();
     return (
@@ -70,39 +85,87 @@ export const CoinShow = () => {
     const [formData, setData] = React.useState({});
     const navigation = useNavigation();
 
-    function reload() {
-        fetch(`https://crewcoin.herokuapp.com/crewuser/reload/${value._id}`, {
-            method: "GET",
+    const triggerPushNotificationHandler = (token, title, body) => {
+        fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Accept-Encoding": "gzip,deflate",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: token,
+            title,
+            body,
+          }),
+        })
+      }
+
+    function askDeleteUser(user) {
+        Alert.alert(
+            'Delete User',
+            `Are you sure you want to delete ${user.firstname} ${user.lastname}? This action cannot be undone.`,
+
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                },
+                {
+                    text: 'OK', onPress: () => {
+                        deleteUser(user._id);
+                    }
+                },
+            ],
+            { cancelable: false },
+        );
+    }
+    function deleteUser(id) {
+        fetch(`https://crewcoin.herokuapp.com/crewuser/${id}`, {
+            method: "DELETE",
             headers: {
                 authorization: "jwt",
                 credentials: "same-origin",
                 Accept: "application/json",
                 "Content-Type": "application/json",
                 mode: "cors"
-            },
+            }
         })
+
             .then(res => res.json())
             .then(res => {
-                if (res) {
-                    setValue(res[0]);
-                } else {
+                if (res.success) {
+                    reload();
                     Alert.alert(
-                        "Error",
-                        "Please check your internet connection",
+                        'Success',
+                        `${res.status}`,
                         [
-
-                            { text: "OK", onPress: () => console.log("OK Pressed") }
-                        ]
-                    )
+                            {
+                                text: 'OK',
+                                onPress: () => console.log('OK Pressed'),
+                                style: 'cancel',
+                            },
+                        ],
+                        { cancelable: false },
+                    );
                 }
             })
             .catch(err => {
-                console.log(err);
+                Alert.alert(
+                    'Error',
+                    'Something went wrong!',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => console.log('OK Pressed'),
+                            style: 'cancel',
+                        },
+                    ],
+                    { cancelable: false },
+                );
             }
-            );
-    }
-
-    useEffect(() => {
+            )
         fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
             method: "GET",
             headers: {
@@ -134,15 +197,106 @@ export const CoinShow = () => {
                 console.log(err);
             }
             );
-    }, []);
     let user = userData.filter(el => el.username !== value.username);
+}
 
-    return (
-        user.map((user) => {
-            function handleReceive(navigation, user, formData, self) {
-                const amount = formData.coinincrease + user.balance;
-                const comment = formData.comments;
-                if (value.balance >= formData.coinincrease) {
+
+
+function reload() {
+    fetch(`https://crewcoin.herokuapp.com/crewuser/reload/${value._id}`, {
+        method: "GET",
+        headers: {
+            authorization: "jwt",
+            credentials: "same-origin",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+        },
+    })
+        .then(res => res.json())
+        .then(res => {
+            if (res) {
+                setValue(res[0]);
+            } else {
+                Alert.alert(
+                    "Error",
+                    "Please check your internet connection",
+                    [
+
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                )
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        }
+        );
+}
+
+useEffect(() => {
+
+    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+        method: "GET",
+        headers: {
+            authorization: "jwt",
+            credentials: "same-origin",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+        },
+    })
+        .then(res => res.json())
+        .then(res => {
+            if (res) {
+                setUser(res);
+                let self = res.filter(user => user.username === value.username);
+                setValue(self[0]);
+            } else {
+                Alert.alert(
+                    "Error",
+                    "Please check your internet connection",
+                    [
+
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                )
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        }
+        );
+}, []);
+let removeAdmin = userData.filter(el => el.admin === false);
+let user = removeAdmin.filter(el => el.username !== value.username);
+
+
+return (
+    user.map((user) => {
+        const userId = user._id;
+        const username = user.username;
+        function handleReceive(e, user, formData, self, userId) {
+            const coinincrease = formData[userId + username];
+            const amount = coinincrease + user.balance;
+            const newComment = () => {
+                if (formData[userId] == undefined) {
+                    return "";
+                } else {
+                    return formData[userId];
+                }
+
+            }
+            const comment = newComment();
+            console.log(coinincrease);
+            console.log(comment)
+            setData({
+                ...formData,
+                [user._id + user.username]: coinincrease
+            })
+
+            if (value.balance >= coinincrease) {
+                if (coinincrease > 0) {
                     fetch(`https://crewcoin.herokuapp.com/crewuser/${user._id}`, {
                         method: "PUT",
                         headers: {
@@ -157,7 +311,7 @@ export const CoinShow = () => {
                             "history": {
                                 "date": new Date(),
                                 "action": "Received",
-                                "amount": formData.coinincrease,
+                                "amount": coinincrease,
                                 "balance": amount,
                                 "comments": comment,
                                 "who": `from ${value.firstname} ${value.lastname}`
@@ -170,7 +324,7 @@ export const CoinShow = () => {
                             if (res.success) {
                                 Alert.alert(
                                     "Coins Sent!",
-                                    `You sent ${formData.coinincrease} crew coins to ${user.firstname + " " + user.lastname}`,
+                                    `You sent ${coinincrease} crew coins to ${user.firstname + " " + user.lastname}`,
                                     [
                                         {
                                             text: "Cancel",
@@ -181,14 +335,22 @@ export const CoinShow = () => {
                                     ]
                                 );
                             } else {
-                                console.log("an error occured")
+                                Alert.alert(
+                                    `${err}`,
+                                    "Please check internet connection!",
+                                    [
+
+                                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                                    ]
+                                )
                             }
                         })
                         .catch(err => {
                             console.log("an error occured")
                         }
                         );
-                    const secondAmount = value.balance - formData.coinincrease;
+
+                    const secondAmount = value.balance - coinincrease;
                     fetch(`https://crewcoin.herokuapp.com/crewuser/${value._id}`, {
                         method: "PUT",
                         headers: {
@@ -203,7 +365,7 @@ export const CoinShow = () => {
                             "history": {
                                 "date": new Date(),
                                 "action": "Sent",
-                                "amount": formData.coinincrease,
+                                "amount": coinincrease,
                                 "balance": secondAmount,
                                 "comments": comment,
                                 "who": `to ${user.firstname} ${user.lastname}`
@@ -211,37 +373,10 @@ export const CoinShow = () => {
                         }),
                     })
 
-                        .then(res => res.json())
-                        .then(res => {
-                            if (res.success) {
-                                setData({ coinincrease: 0, comments: "" });
-                                Alert.alert(
-                                    "Coins Sent!",
-                                    `You sent ${formData.coinincrease} crew coins to ${user.firstname + " " + user.lastname}`,
-                                    [
-                                        {
-                                            text: "Cancel",
-                                            onPress: () => console.log("Cancel Pressed"),
-                                            style: "cancel"
-                                        },
-                                        { text: "OK", onPress: () => console.log("OK Pressed") }
-                                    ]
-                                );
-                            } else {
-                                Alert.alert(
-                                    "Alert Title",
-                                    `${err}`,
-                                    [
-                                        {
-                                            text: "Cancel",
-                                            onPress: () => console.log("Cancel Pressed"),
-                                            style: "cancel"
-                                        },
-                                        { text: "OK", onPress: () => console.log("OK Pressed") }
-                                    ]
-                                );
-                            }
-                        })
+                        .then(res => res.json(),
+                            setData({ ...formData, [userId + username]: coinincrease, [userId]: "" }),
+                            reload()
+                        )
                         .catch(err => {
                             Alert.alert(
                                 `${err}`,
@@ -253,92 +388,91 @@ export const CoinShow = () => {
                             )
                         }
                         );
-                    reload();
-                }
-                else {
-                    Alert.alert(
-                        "You need more crew coins!",
-                        `You do not have enough crew coins! Current balance: ${value.balance}`,
-                        [
-                            {
-                                text: "Cancel",
-                                onPress: () => console.log("Cancel Pressed"),
-                                style: "cancel"
-                            },
-                            { text: "OK", onPress: () => console.log("OK Pressed") }
-                        ]
-                    );
+                        const message = `${value.firstname} ${value.lastname} sent you ${coinincrease} crew coins!`;
+                        triggerPushNotificationHandler(user.pushToken, `Cha-Ching!`, message);
+                } else {
+                    return null
                 }
             }
+            else {
+                Alert.alert(
+                    "You need more crew coins!",
+                    `You do not have enough crew coins! Current balance: ${value.balance}`,
+                    [
+                        {
+                            text: "Cancel",
+                            onPress: () => console.log("Cancel Pressed"),
+                            style: "cancel"
+                        },
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                );
+            }
 
-            return (
+        }
 
-                <Box
-                    key={user._id}
-                    style={{ width: 500, marginLeft: 0 }}
-                    shadow={9}
-                    mt="3"
-                    maxW="380"
-                    rounded="lg"
-                    overflow="hidden"
-                    borderColor="coolGray.200"
-                    borderWidth="1"
-                    _dark={{
-                        borderColor: "coolGray.600",
-                        backgroundColor: "gray.700",
-                    }}
-                    _web={{
-                        shadow: 2,
-                        borderWidth: 0,
-                    }}
-                    _light={{
-                        backgroundColor: "gray.50",
-                    }}
-                >
-
-                    <Stack>
+        return (
+            <Box
+                key={user._id}
+                style={{ width: 500, marginLeft: 0 }}
+                shadow={9}
+                mt="3"
+                maxW="380"
+                rounded="lg"
+                overflow="hidden"
+                borderColor="coolGray.200"
+                borderWidth="1"
+                _web={{
+                    shadow: 2,
+                    borderWidth: 0,
+                }}
+                _light={{
+                    backgroundColor: "gray.50",
+                }}
+            >
+                <Stack>
+                    <TouchableOpacity delayLongPress={2000} onLongPress={() => askDeleteUser(user)}>
                         <HStack display="flex" flexDirection="row" alignItems="center" w="100%" space={3} justifyContent="space-evenly">
-
                             <Text
-                                onLongPress={() => {
-                                    Alert.alert(
-                                        "Delete User",
-                                        "Are you sure you would like to delete this user?",
-                                        [                                     
-                                            { text: "OK", onPress: () => console.log("OK Pressed") },
-                                            { text: "Cancel", onPress: () => console.log("Cancel Pressed") }
-                                        ]
-                                    )
-                                }}
                                 width="40%"
                                 py="3"
                                 px="2"
                                 fontSize="lg"
                                 color="gray.600"
-                                _dark={{
-                                    color: "amber.600",
-                                }}
                                 fontWeight="600"
                             >
                                 {user.firstname + " " + user.lastname}
                             </Text>
                             <HStack justifyContent="center">
-                                <Counter start={0} value={formData.coinincrease} onChange={(value) => setData({ ...formData, coinincrease: value })} />
+                                <Counter key={user._id} start={formData[user._id + user.username]} min={0} onChange={(e) => {
+
+                                    setData({
+                                        ...formData,
+                                        [user._id + user.username]: e
+                                    })
+                                }} />
+
                                 <Button ml="3"
                                     onPress={() => {
-                                        (handleReceive(navigation, user, formData, self));
+                                        (handleReceive(navigation, user, formData, self, userId));
 
 
                                     }}>Send</Button>
                             </HStack>
                         </HStack>
-                        <Input value={formData.comments} m="2" size="sm" placeholder="Comments:" onChangeText={(value) => setData({ ...formData, comments: value })} />
-                    </Stack>
-                </Box>
+                    </TouchableOpacity>
+                    <Input id={user._id} value={formData[user._id]} placeholder="Comments" onChangeText={(text) => {
+                        setData({
+                            ...formData,
+                            [user._id]: text
+                        })
+                    }} />
+                </Stack>
+            </Box>
 
-            )
-        })
-    )
+        )
+    })
+)
 }
 
 const styles = StyleSheet.create({

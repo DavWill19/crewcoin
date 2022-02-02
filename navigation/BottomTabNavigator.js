@@ -22,12 +22,12 @@ export default function BottomTabNavigator() {
       screenOptions={{ style: { elevation: 20 }, headerShown: false, tabBarActiveTintColor: Colors[colorScheme].tint }}
     >
       <BottomTab.Screen
-        name="Balance"
+        name="My Wallet"
         screenOptions={{ headerShown: false }}
         component={TabOneNavigator}
         options={{
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="cash-outline" color={color} />
+            <TabBarIcon name="wallet-outline" color={color} />
           ),
         }}
       />
@@ -81,9 +81,9 @@ function TabOneNavigator(props) {
     <TabOneStack.Navigator screenOptions={{ headerShown: false }}>
       <TabOneStack.Screen
         {...props}
-        name="Balance"
+        name="Wallet"
         component={TabOneScreen}
-        options={{ headerTitle: "Balance" }}
+        options={{ headerTitle: "Wallet" }}
       />
     </TabOneStack.Navigator>
 
