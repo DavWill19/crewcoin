@@ -13,8 +13,7 @@ import {
     NativeBaseProvider,
 } from "native-base"
 import { useNavigation } from '@react-navigation/native';
-
-import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView  } from "react-native";
+import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView } from "react-native";
 import { useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import * as Notifications from "expo-notifications"
@@ -22,56 +21,68 @@ import * as Permissions from "expo-permissions"
 
 Notifications.setNotificationHandler({
     handleNotification: async () => {
-      return {
-        shouldShowAlert: true,
-      }
+        return {
+            shouldShowAlert: true,
+        }
     },
-  })
+})
 
 export const Signup = () => {
     const navigation = useNavigation();
     const { value, setValue } = useContext(UserContext);
     const [formData, setData] = React.useState({});
     const [user, setUser] = React.useState({});
+    const [isLoading, setIsLoading] = React.useState(false);
+    function Spinner() {
+        if (isLoading) {
+            return (
+                <Image source={require('../assets/images/genericspinner.gif')}
+                    style={{ marginTop: "-69%", width: '36%', height: '40%', zIndex: 2, justifyContent: "center", alignItems: "center", top: "57%", right: "-33%", resizeMode: "contain" }} />
+            )
+        }
+    }
 
     useEffect(() => {
         // Permission for iOS
         Permissions.getAsync(Permissions.NOTIFICATIONS)
-          .then(statusObj => {
-            // Check if we already have permission
-            if (statusObj.status !== "granted") {
-              // If permission is not there, ask for the same
-              return Permissions.askAsync(Permissions.NOTIFICATIONS)
-            }
-            return statusObj
-          })
-          .then(statusObj => {
-            // If permission is still not given throw error
-            if (statusObj.status !== "granted") {
-              throw new Error("Permission not granted")
-            }
-          })
-          .then(() => {
-            return Notifications.getExpoPushTokenAsync()
-          })
-          .then(response => {
-            const deviceToken = response.data
-            console.log({ deviceToken })
-            setData({ ...formData, pushToken: deviceToken })
-          })
-          .catch(err => {
-            return null
-          })
-      }, [])
+            .then(statusObj => {
+                // Check if we already have permission
+                if (statusObj.status !== "granted") {
+                    // If permission is not there, ask for the same
+                    return Permissions.askAsync(Permissions.NOTIFICATIONS)
+                }
+                return statusObj
+            })
+            .then(statusObj => {
+                // If permission is still not given throw error
+                if (statusObj.status !== "granted") {
+                    throw new Error("Permission not granted")
+                }
+            })
+            .then(() => {
+                return Notifications.getExpoPushTokenAsync()
+            })
+            .then(response => {
+                const deviceToken = response.data
+                console.log({ deviceToken })
+                setData({ ...formData, pushToken: deviceToken })
+            })
+            .catch(err => {
+                return null
+            })
+    }, [])
 
 
     return (
-        <Box backgroundColor="#fff" safeArea p="2" py="4" w="100%" maxW="100%">
+        <Box backgroundColor="#fff" safeArea p="2" py="4" w="80%" maxW="100%">
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
+                style={{ flex: 1 }}
             >
+            
+                {Spinner()}
                 <Image style={styles.title} source={require('../assets/images/crewcoinlogo.png')} />
+                <ScrollView>
                 <Heading
                     color="amber.600"
                     fontWeight="medium"
@@ -107,7 +118,7 @@ export const Signup = () => {
                     </FormControl>
                     <FormControl>
                         <FormControl.Label>Organization</FormControl.Label>
-                        <Input placeholder="Organization" onChangeText={(value) => setData({ ...formData, organization: value })} />
+                        <Input placeholder="Your Company Name" onChangeText={(value) => setData({ ...formData, organization: value })} />
                     </FormControl>
                     <FormControl>
                         <FormControl.Label>Portal ID</FormControl.Label>
@@ -118,7 +129,7 @@ export const Signup = () => {
                             if (formData.password === formData.confirmpassword && formData.password.length > 7 && /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(formData.password)) {
 
                                 if (/.+@.+\.[A-Za-z]+$/.test(formData.username)) {
-                                    handleSubmit(formData, navigation, setUser, setValue);
+                                    handleSubmit(formData, navigation, setUser, setValue, setIsLoading);
                                 } else {
                                     Alert.alert(
                                         "Alert Title",
@@ -158,12 +169,34 @@ export const Signup = () => {
                                 fontWeight: "medium",
                                 fontSize: "sm",
                             }}
-                            href="www.crew-coin.com"
+                            href="https://www.crew-coin.com"
                         >
                             Setup New Organization
                         </Link>
                     </HStack>
+                    <HStack mb="6" justifyContent="center">
+                        <Text
+                            fontSize="sm"
+                            color="coolGray.600"
+                            _dark={{
+                                color: "warmGray.200",
+                            }}
+                        >
+                            I have an account. {" "}
+                        </Text>
+                        <Link
+                            _text={{
+                                color: "indigo.500",
+                                fontWeight: "medium",
+                                fontSize: "sm",
+                            }}
+                            onPress={() => navigation.navigate("Login")}
+                        >
+                            Login.
+                        </Link>
+                    </HStack>
                 </VStack>
+            </ScrollView>
             </KeyboardAvoidingView>
         </Box>
     )
@@ -171,7 +204,8 @@ export const Signup = () => {
 
 
 
-function handleSubmit(formData, navigation, setUser, setValue) {
+function handleSubmit(formData, navigation, setUser, setValue, setIsLoading) {
+    setIsLoading(true)
     fetch("https://crewcoin.herokuapp.com/crewuser/signup", {
         method: "POST",
         headers: {
@@ -184,10 +218,10 @@ function handleSubmit(formData, navigation, setUser, setValue) {
         body: JSON.stringify({
             "username": formData.username,
             "password": formData.password,
-            "firstname": formData.firstname,
-            "lastname": formData.lastname,
+            "firstname": formData.firstname[0].toUpperCase() + formData.firstname.substring(1),
+            "lastname": formData.lastname[0].toUpperCase() + formData.lastname.substring(1),
             "phone": formData.phone,
-            "organization": formData.organization,
+            "organization": formData.organization[0].toUpperCase() + formData.organization.substring(1),
             "portalId": formData.portalId,
             "pushToken": formData.pushToken
 
@@ -226,12 +260,13 @@ function handleSubmit(formData, navigation, setUser, setValue) {
             )
         }
         );
+    setIsLoading(false)
 }
 
 export default function SignupScreen() {
     return (
         <NativeBaseProvider>
-            <ScrollView backgroundColor="#fff"> 
+            <ScrollView backgroundColor="#fff">
                 <Center flex={1} px="3">
                     <Signup />
                 </Center>
@@ -246,7 +281,7 @@ const styles = StyleSheet.create({
     title: {
         width: 350,
         resizeMode: 'contain',
-        marginLeft: "-5%",
+        marginLeft: "-14%",
         marginTop: -90,
         marginBottom: -90,
 

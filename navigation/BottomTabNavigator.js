@@ -4,18 +4,33 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useColorScheme } from "react-native";
-
+import { useContext } from "react";
+import { UserContext }  from "../screens/UserContext";
 import Colors from "../constants/Colors";
 import TabOneScreen from "../screens/TabOneScreen";
 import TabTwoScreen from "../screens/TabTwoScreen";
 import TabThreeScreen from "../screens/TabThreeScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import { useFocusEffect } from "@react-navigation/core";
 
 const BottomTab = createBottomTabNavigator();
 
+
 export default function BottomTabNavigator() {
   const colorScheme = useColorScheme();
+  const { value, setValue } = useContext(UserContext);
+  console.log(value.newStoreItem, "newStoreItem");
+
+  function alertNew(user) {
+    if (user) {
+      return (
+        <TabBarIcon name="ios-ellipse" color="gold" size={12} style={{ top: 2, right: 25, position: "absolute" }} />
+      );
+    } else {
+      return null
+    }
+  }
 
   return (
     <BottomTab.Navigator
@@ -37,7 +52,10 @@ export default function BottomTabNavigator() {
         component={TabTwoNavigator}
         options={{
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="newspaper-outline" color={color} />
+            <>
+              {alertNew(value.newAnnouncement)}
+              <TabBarIcon name="newspaper-outline" color={color} />
+            </>
           ),
         }}
       />
@@ -47,7 +65,10 @@ export default function BottomTabNavigator() {
         component={TabThreeNavigator}
         options={{
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="cart-outline" color={color} />
+            <>
+              {alertNew(value.newStoreItem)}
+              <TabBarIcon name="cart-outline" color={color} />
+            </>
           ),
         }}
       />
@@ -125,11 +146,11 @@ function SettingsNavigator(props) {
   const TabFourStack = createStackNavigator();
   return (
     <TabFourStack.Navigator screenOptions={{ headerShown: false }}>
-        <TabFourStack.Screen
-          name="Account"
-          component={SettingsScreen}
-          options={{ headerTitle: "Account" }}
-        />
+      <TabFourStack.Screen
+        name="Account"
+        component={SettingsScreen}
+        options={{ headerTitle: "Account" }}
+      />
     </TabFourStack.Navigator>
   );
 }

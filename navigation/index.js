@@ -15,7 +15,7 @@ import NotFoundScreen from "../screens/NotFoundScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 import LinkingConfiguration from "./LinkingConfiguration";
 import { UserContext } from "../screens/UserContext";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 export default function Navigation({ colorScheme }) {
   const [value, setValue] = useState({});
@@ -37,6 +37,8 @@ export default function Navigation({ colorScheme }) {
 const Stack = createStackNavigator();
 
 function RootNavigator(props) {
+const { value, setValue } = useContext(UserContext);
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen

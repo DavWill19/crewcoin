@@ -8,6 +8,7 @@ import { useState } from "react";
 import { UserContext } from "./UserContext";
 import moment from "moment";
 import { toggleClass } from "dom-helpers";
+import * as SecureStore from 'expo-secure-store';
 
 
 export default function SettingsScreen() {
@@ -56,6 +57,17 @@ export const Example = (value) => {
     const navigation = useNavigation();
     const [formData, setData] = useState({});
     const [show, setShow] = useState(false);
+    const [token, setToken] = useState('');
+
+    async function getValueFor(key) {
+        let result = await SecureStore.getItemAsync(key);
+        if (result) {
+            setToken(result);
+        } else {
+            console.log('No values stored under that key.');
+        }
+    }
+    getValueFor('token');
 
 
 
@@ -94,14 +106,15 @@ export const Example = (value) => {
         fetch(`https://crewcoin.herokuapp.com/crewuser/passchange/${value.username}`, {
             method: "PUT",
             headers: {
-                authorization: "jwt",
+                authorization: `Bearer ${token}`,
                 credentials: "same-origin",
                 Accept: "application/json",
                 "Content-Type": "application/json",
                 mode: "cors"
             },
             body: JSON.stringify({
-                "password": password
+                "password": password,
+                "user": value.firstname,
             }),
         })
 
@@ -128,7 +141,14 @@ export const Example = (value) => {
                 }
             })
             .catch(err => {
-                console.log(err)
+                Alert.alert(
+                    "Error",
+                    "Please login again",
+                    [
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                )
+                navigation.navigate("Login");
             }
             );
     }
@@ -140,11 +160,11 @@ export const Example = (value) => {
         <>
             <Box
                 shadow={7}
-                mt="5"
+                mt="3"
                 mb="2"
                 my="1"
-                pt="6"
-                pb="6"
+                pt="3"
+                pb="3"
 
                 style={styles.image2}
                 maxW="100%"

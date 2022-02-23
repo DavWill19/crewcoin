@@ -14,10 +14,11 @@ import {
     NativeBaseProvider,
 } from "native-base"
 import { useNavigation } from '@react-navigation/native';
-
-import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView, } from "react-native";
+import * as SecureStore from 'expo-secure-store';
+import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView } from "react-native";
 import { Component, useContext } from "react";
 import { UserContext } from "./UserContext";
+
 
 
 export function Login() {
@@ -29,14 +30,14 @@ export function Login() {
     function Spinner() {
         if (isLoading) {
             return (
-                <Image source={require('../assets/images/ballspinner.gif')}
-                    style={{ marginTop: "-50%", width: '30%', height: '40%', zIndex:2, justifyContent: "center", alignItems: "center", top: "55%", right: "-35%", resizeMode: "contain" }} />
+                <Image source={require('../assets/images/genericspinner.gif')}
+                    style={{ marginTop: "-69%", width: '36%', height: '40%', zIndex:2, justifyContent: "center", alignItems: "center", top: "57%", right: "-33%", resizeMode: "contain" }} />
             )
         }
     }
 
     return (
-        <View width="110%" backgroundColor="#fff">
+        <View width="80%" backgroundColor="#fff">
         {Spinner()}
             <Box mx="auto" safeArea p="2" py="4" w="100%" maxW="340" >
                 <Image style={styles.title} source={require('../assets/images/crewcoinlogo.png')} />
@@ -131,7 +132,10 @@ export function Login() {
     )
 }
 
-
+async function save(key, value) {
+    await SecureStore.setItemAsync(key, value);
+  }
+  
 
 function handleSubmit(formData, navigation, setUser, setValue, setData, isLoading, setIsLoading) {
     setIsLoading(true);
@@ -156,7 +160,9 @@ function handleSubmit(formData, navigation, setUser, setValue, setData, isLoadin
                 setIsLoading(false);
                 setUser(res.user);
                 setValue(res.user);
-                navigation.navigate("Root");
+                //store json web token in secure storage
+                save("token", res.token);
+                navigation.navigate('Root');
             } else {
                 Alert.alert(
                     "Alert Title",
@@ -186,7 +192,6 @@ function handleSubmit(formData, navigation, setUser, setValue, setData, isLoadin
             setIsLoading(false);
         }
         );
-    console.log(isLoading);
 }
 
 export default function LoginScreen() {
@@ -218,7 +223,7 @@ const styles = StyleSheet.create({
     title: {
         width: 350,
         resizeMode: 'contain',
-        marginLeft: -20,
+        marginLeft: -40,
 
 
     },

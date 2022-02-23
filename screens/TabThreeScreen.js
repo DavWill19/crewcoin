@@ -1,9 +1,8 @@
 import { StyleSheet, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView } from "react-native";
-import { NativeBaseProvider, Box, Input, Heading, Divider, AspectRatio, Stack, HStack, Text, Icon, VStack, Center, StatusBar, Button } from 'native-base';
-import { Ionicons } from '@expo/vector-icons';
-import { FlatList, ScrollView } from "react-native-gesture-handler";
+import { NativeBaseProvider, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button } from 'native-base';
+import { ScrollView } from "react-native-gesture-handler";
 import prizes from './sample';
-import { Component, useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useState } from "react";
 import { UserContext } from "./UserContext";
 import * as ImagePicker from 'expo-image-picker';
@@ -12,8 +11,11 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
 import firebaseConfig from "../firebaseConfig.tsx";
 import { initializeApp } from "firebase/app";
+import { useIsFocused } from '@react-navigation/native';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import moment from "moment";
+import * as SecureStore from 'expo-secure-store';
+import { useNavigation } from '@react-navigation/native';
 
 
 initializeApp(firebaseConfig);
@@ -22,12 +24,161 @@ export default function TabThreeScreen() {
   const { value, setValue } = useContext(UserContext);
   const [prizesData, setPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const isFocused = useIsFocused();
+  const [userData, setUser] = useState([]);
+  const [adminPushToken, setAdmin] = useState([]);
+  const [token, setToken] = useState('');
+  const navigation = useNavigation();
+
+
+  async function getValueFor(key) {
+    let result = await SecureStore.getItemAsync(key);
+    if (result) {
+      setToken(result);
+    } else {
+      console.log('No values stored under that key.');
+    }
+  }
+  getValueFor('token');
+  console.log(token);
+
+
+  const triggerPushNotificationHandler = (token, title, body) => {
+    fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-Encoding": "gzip,deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: token,
+        title,
+        body,
+      }),
+    })
+  }
+
+  useEffect(() => {
+    setIsLoading(true);
+    // Permission for iOS
+    Permissions.getAsync(Permissions.NOTIFICATIONS)
+      .then(statusObj => {
+        // Check if we already have permission
+        if (statusObj.status !== "granted") {
+          // If permission is not there, ask for the same
+          return Permissions.askAsync(Permissions.NOTIFICATIONS)
+        }
+        return statusObj
+      })
+      .then(statusObj => {
+        // If permission is still not given throw error
+        if (statusObj.status !== "granted") {
+          throw new Error("Permission not granted")
+        }
+      })
+      .catch(err => {
+        return null
+      })
+
+      //fetch store items
+      fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+        method: "GET",
+        headers: {
+          authorization: `bearer ${token}`,
+          credentials: "same-origin",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (res) {
+            setUser(res);
+            let self = res.filter(user => user.username === value.username);
+            setValue(self[0]);
+            const admin = res.filter(user => user.admin === true)
+            const adminPushToken = admin[0].pushToken;
+            setAdmin(adminPushToken);
+            setIsLoading(false);
+          } else {
+            Alert.alert(
+              "Error",
+              "Please check your internet connection",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+            setIsLoading(false);
+          }
+        })
+        .catch(err => {
+          Alert.alert(
+            "Error",
+            "Please login again",
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          )
+          navigation.navigate("Login");
+        }
+        );
+
+      // update alerts
+      if (value.newStoreItem) {
+      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
+        method: "PUT",
+        headers: {
+          //bearer token
+          authorization: `bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "newStoreItem": false,
+          "newTransaction": value.newTransaction,
+          "newAnnouncement": value.newAnnouncement,
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            setValue(res.crewuser);
+          } else {
+            Alert.alert(
+              `${err}`,
+              "Please check internet connection!",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          Alert.alert(
+            "Error",
+            "Please login again",
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          )
+          navigation.navigate("Login");
+        });
+      }                       
+  }, []);
+
+
 
   function Spinner() {
     if (isLoading) {
       return (
-        <Image alt="spinner" source={require('../assets/images/ballspinner.gif')}
-          style={{ marginTop: "-85%", width: '20%', height: '20%', justifyContent: "center", alignItems: "center", zIndex: 20000000, top: "70%", resizeMode: "contain" }} />
+        <Image alt="spinner" source={require('../assets/images/genericspinner.gif')}
+          style={{ marginTop: "-28%", width: '30%', height: '20%', justifyContent: "center", alignItems: "center", zIndex: 20000000, top: "48%", resizeMode: "contain" }} />
       )
     } else {
       return null;
@@ -39,6 +190,22 @@ export default function TabThreeScreen() {
     const imageUrl = postData.imageUrl;
 
     function handlePost(setPrizes) {
+      let removeAdmin = userData.filter(el => el.admin === false);
+      let user = removeAdmin.filter(el => el.username !== value.username && el.pushToken.length > 0);
+      let usersPushtoken = user.map(el => el.pushToken);
+
+      function coin(cost) {
+        if (cost > 1) {
+          return (
+            `${cost} Crew Coins`
+          )
+        } else {
+          return (
+            `${cost} Crew Coin`
+          )
+        }
+      }
+
       if (!postData.title || !postData.description || !postData.imageUrl || !postData.cost || Number.isInteger(parseInt(postData.cost)) === false) {
         Alert.alert("Please fill in all fields and add photo! Cost must be a number!");
       } else {
@@ -57,11 +224,10 @@ export default function TabThreeScreen() {
         setTimeout(() => {
           getDownloadURL(ref(storage, `${imageName}`))
             .then((url) => {
-              console.log(url);
               fetch(`https://crewcoin.herokuapp.com/store`, {
                 method: "POST",
                 headers: {
-                  authorization: "jwt",
+                  authorization: `bearer ${token}`,
                   credentials: "same-origin",
                   Accept: "application/json",
                   "Content-Type": "application/json",
@@ -79,6 +245,7 @@ export default function TabThreeScreen() {
                 .then(res => res.json())
                 .then(res => {
                   if (res.success) {
+                    triggerPushNotificationHandler(usersPushtoken, `New Store Item!`, `${postData.title} Cost: ${coin(postData.cost)}`);
                     setPrizes(prizesData => [...prizesData, res.store])
                     Alert.alert(
                       "Success!",
@@ -109,11 +276,17 @@ export default function TabThreeScreen() {
                   )
                 }
                 );
-                setIsLoading(false);
+              setIsLoading(false);
             })
             .catch((error) => {
-              console.log(error);
-              // Handle any errors
+              Alert.alert(
+                "Error",
+                "Please login again",
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              )
+              navigation.navigate("Login");
             })
         }, 3000);
       }
@@ -157,7 +330,6 @@ export default function TabThreeScreen() {
         { format: ImageManipulator.SaveFormat.PNG }
       );
       setPost({ ...postData, imageUrl: processedImage.uri, image: processedImage });
-      console.log("processedImage", processedImage)
     }
 
     if (value.admin) {
@@ -171,6 +343,8 @@ export default function TabThreeScreen() {
           return null;
         }
       }
+      const memoizedTempImage = useMemo(TempImage);
+
 
       return (
 
@@ -184,7 +358,7 @@ export default function TabThreeScreen() {
             maxW="360"
             rounded="lg"
             overflow="hidden"
-            borderColor="gray.100"
+            borderColor="gray.200"
             borderWidth="1"
             _dark={{
               borderColor: "gray.900",
@@ -192,7 +366,7 @@ export default function TabThreeScreen() {
             }}
             _web={{
               shadow: 2,
-              borderWidth: 0,
+              borderWidth: 1,
             }}
             _light={{
               backgroundColor: "gray.50",
@@ -211,13 +385,13 @@ export default function TabThreeScreen() {
                 </TouchableOpacity>
               </HStack>
               <Center>
-                <TempImage />
+                {memoizedTempImage}
               </Center>
               <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
               <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
               <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value })} placeholder="Price" />
 
-              <Button onPress={() => { handlePost(setPrizes) }}> Post New Item</Button>
+              <Button shadow={3} onPress={() => { handlePost(setPrizes) }}> Post New Item</Button>
             </Stack>
           </Box>
         </>
@@ -230,11 +404,12 @@ export default function TabThreeScreen() {
   const Prizes = () => {
     const { value, setValue } = useContext(UserContext);
     const [prizesData, setPrizes] = useState([]);
+    const [balanceData, setBalance] = useState([]);
     useEffect(() => {
       fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
         headers: {
-          authorization: "jwt",
+          authorization: `bearer ${token}`,
           credentials: "same-origin",
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -246,7 +421,6 @@ export default function TabThreeScreen() {
         .then(res => {
           if (res.success) {
             setPrizes(res.prizes);
-            console.log(res.prizes)
           } else {
             Alert.alert(
               "Something went wrong",
@@ -258,9 +432,10 @@ export default function TabThreeScreen() {
           }
         })
         .catch(err => {
+          console.log(err);
           Alert.alert(
             `Error`,
-            "Please check internet connection!",
+            "Please check internet connection! You may need to login again",
             [
               { text: "OK", onPress: () => console.log("OK Pressed") }
             ]
@@ -321,6 +496,105 @@ export default function TabThreeScreen() {
       }
     }
     function buyButton(prize) {
+      const amount = value.balance - prize.cost;
+      console.log(amount, "amount")
+
+
+      function purchasePrize(prize) {
+        if (value.balance >= prize.cost) {
+          setIsLoading(true);
+
+          fetch(`https://crewcoin.herokuapp.com/crewuser/${value._id}`, {
+            method: "PUT",
+            headers: {
+              authorization: `bearer ${token}`,
+              credentials: "same-origin",
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              mode: "cors"
+            },
+            body: JSON.stringify({
+              "email": value.username,
+              "cost": prize.cost,
+              "name": `${value.firstname} ${value.lastname}`,
+              "balance": amount,
+              "purchase": true,
+              "portalId": value.portalId,
+              "history": {
+                "date": new Date(),
+                "action": `Purchased ${prize.title} for`,
+                "balance": amount,
+                "userEmail": value.username,
+                "prize": prize,
+                "who": "",
+                "amount": prize.cost,
+                "comments": "Congratulations on your purchase!"
+
+              }
+            }),
+          })
+            .then(res => res.json())
+            .then(res => {
+              if (res.success) {
+                triggerPushNotificationHandler(
+                  adminPushToken,
+                  `New Purchase from ${value.firstname} ${value.lastname}!`,
+                  `${prize.title} Cost: ${coin(prize.cost)}`
+                );
+                const balance = res.crewuser.balance - prize.cost;
+                setValue({ ...value, balance: balance });
+                setIsLoading(false);
+                Alert.alert(
+                  `${prize.title} purchased!`,
+                  `Please see your manager for further details`,
+                  [
+                    {
+                      text: "OK", onPress: () => {
+                        console.log("OK Pressed")
+                      }
+                    }
+                  ],
+                  { cancelable: false }
+                );
+              } else {
+                Alert.alert(
+                  `${err}`,
+                  "Please check internet connection!",
+                  [
+
+                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                  ]
+                )
+                setIsLoading(false);
+              }
+            })
+            .catch(err => {
+              Alert.alert(
+                "Error",
+                "Please login again",
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              )
+              navigation.navigate("Login");
+            }
+            );
+        }
+        else {
+          Alert.alert(
+            `Insufficient Funds`,
+            `Current balance: ${coin(value.balance)}.`,
+            [
+              {
+                text: "OK", onPress: () => {
+                  console.log("OK Pressed")
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        }
+      }
       if (!value.admin) {
         return (
           <Button mb="2" onPress={() => {
@@ -335,7 +609,7 @@ export default function TabThreeScreen() {
                 },
                 {
                   text: "OK", onPress: () => {
-                    console.log("purchased!")
+                    purchasePrize(prize)
                   }
                 }
               ],
@@ -351,7 +625,6 @@ export default function TabThreeScreen() {
     function deletePrize(prize) {
       const storage = getStorage();
       var prizeRef = ref(storage, prize.image);
-      console.log(prize.image)
 
       // Delete the file
       deleteObject(prizeRef).then(() => {
@@ -362,7 +635,7 @@ export default function TabThreeScreen() {
       fetch(`https://crewcoin.herokuapp.com/store/${prize._id}`, {
         method: "DELETE",
         headers: {
-          authorization: "jwt",
+          authorization: `bearer ${token}`,
           credentials: "same-origin",
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -376,8 +649,6 @@ export default function TabThreeScreen() {
         .then(res => res.json())
         .then(res => {
           if (res.success) {
-            setPrizes(prizes => prizes.filter(prize => prize._id !== res.prizeId))
-            setValue({ ...value, store: res.store })
             Alert.alert(
               "Prize",
               `Deleted`,
@@ -385,7 +656,8 @@ export default function TabThreeScreen() {
                 { text: "OK", onPress: () => console.log("OK Pressed") }
               ]
             );
-            console.log(res.prizes)
+            setPrizes(prizes => prizes.filter(prize => prize._id !== res.prizeId))
+            setValue({ ...value, store: res.store })
           } else {
             Alert.alert(
               "Something went wrong",
@@ -398,20 +670,32 @@ export default function TabThreeScreen() {
         })
         .catch(err => {
           Alert.alert(
-            `Error`,
-            "Please check internet connection!",
+            "Error",
+            "Please login again",
             [
               { text: "OK", onPress: () => console.log("OK Pressed") }
             ]
           )
+          navigation.navigate("Login");
         }
         );
     }
-
+    function coin(cost) {
+      if (cost > 1) {
+        return (
+          `${cost} Crew Coins`
+        )
+      } else {
+        return (
+          `${cost} Crew Coin`
+        )
+      }
+    }
     return (
       prizes.map(prize => {
         return (
           <Box
+            pt="5"
             shadow={2}
             style={styles.image5}
             mb="2"
@@ -420,7 +704,6 @@ export default function TabThreeScreen() {
             overflow="hidden"
             borderColor="gray.300"
             borderWidth="1"
-            pt="4"
             _dark={{
               borderColor: "gray.900",
               backgroundColor: "gray.900",
@@ -458,8 +741,9 @@ export default function TabThreeScreen() {
                       color: "amber.600",
                     }}
                     fontWeight="600"
+                    fontSize={16}
                   >
-                    {prize.cost} Crew Coins
+                    {coin(prize.cost)}
                   </Text>
                 </HStack>
                 {buyButton(prize)}
@@ -478,18 +762,18 @@ export default function TabThreeScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" enabled>
-    <NativeBaseProvider>
-      <AppBar />
-      <ImageBackground imageStyle=
-        {{ opacity: 0.6 }} alt="bg" style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
-        {Spinner()}
-        <ScrollView>
-          <Example prizes={prizes} />
-          <Prizes prizes={prizes} />
-        </ScrollView>
-      </ImageBackground>
-      <CardBalance />
-    </NativeBaseProvider>
+      <NativeBaseProvider>
+        <AppBar />
+        <ImageBackground imageStyle=
+          {{ opacity: 0.6 }} alt="bg" style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+          {Spinner()}
+          <ScrollView>
+            <Example prizes={prizes} />
+            <Prizes prizes={prizes} />
+          </ScrollView>
+        </ImageBackground>
+        <CardBalance />
+      </NativeBaseProvider>
     </KeyboardAvoidingView>
   );
 }
@@ -499,7 +783,7 @@ function AppBar() {
     <>
       <Box safeAreaTop backgroundColor="#f2f2f2" />
 
-      <HStack bg='amber.300' px="1" justifyContent='space-between' alignItems='center' borderColor="gray.300"
+      <HStack bg='amber.300' px="5" justifyContent='space-between' alignItems='center' borderColor="gray.300"
         borderWidth="1">
         <HStack space="4" alignItems='center'>
           <Image style={styles.coin} source={require('../assets/images/crewcoinlogo.png')} />
@@ -524,7 +808,7 @@ function CardBalance() {
         <Center>
           <HStack >
             <Image style={styles.coinbalance} source={require('../assets/images/coinbalance.png')} />
-            <Text style={styles.icon2}>{value.balance}</Text>
+            <Text bold style={styles.icon2}>{value.balance}</Text>
           </HStack>
         </Center>
       </VStack>
@@ -546,7 +830,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
 
-
   },
   gif: {
     width: 80,
@@ -556,8 +839,7 @@ const styles = StyleSheet.create({
   },
   icon2: {
     color: 'black',
-    fontSize: 42,
-    fontWeight: '700',
+    fontSize: 41,
     paddingTop: 23,
     marginTop: 6,
     opacity: 0.9,
@@ -567,6 +849,7 @@ const styles = StyleSheet.create({
     width: 200,
     resizeMode: 'contain',
     height: 50,
+    marginLeft: -32,
   },
   coingif: {
     size: '100%',
