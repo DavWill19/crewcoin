@@ -119,6 +119,16 @@ export default function TabOneScreen({ route, navigation }) {
       return null
     }
   }
+  function superUser(user, balance) {
+    if (user.superUser) {
+      return (
+        <Ionicons name="infinite" color="#ffcc00" size={55} style={{ top: 1, right: 256, position: "absolute" }} />
+        
+      )
+    } else {
+      return balance
+    }
+  }
   return (
     <NativeBaseProvider>
       {AppBar(value)}
@@ -275,7 +285,7 @@ export default function TabOneScreen({ route, navigation }) {
               <Center>
               <HStack shadow={3} style={styles.button}>
                 <Image alt="gif" style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
-                <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 33}}>{value.balance}</Text>
+                <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 33}}>{superUser(value,value.balance)}</Text>
               </HStack>
               </Center>
             </Stack>
