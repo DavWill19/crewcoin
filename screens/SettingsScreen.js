@@ -1,5 +1,5 @@
 import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView } from "react-native";
-import { NativeBaseProvider, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
+import { NativeBaseProvider, View, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import posts from './sample2';
 import { useNavigation } from '@react-navigation/native';
@@ -155,6 +155,18 @@ export const Example = (value) => {
     function toggleShow() {
         setShow(!show);
     }
+    function superUser(user, balance) {
+        if (user.superUser) {
+          return (
+
+            <Ionicons name="infinite" color="#ffcc00" mt={3} size={22}  />
+
+            
+          )
+        } else {
+          return balance
+        }
+      }
 
     return (
         <>
@@ -250,7 +262,7 @@ export const Example = (value) => {
                             Account Balance:
                         </Heading>
                         <Heading size="md" >
-                            {value.balance}
+                            {superUser(value, value.balance)}
                         </Heading>
                     </HStack>
                     <Divider />

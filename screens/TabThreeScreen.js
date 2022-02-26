@@ -16,6 +16,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "fire
 import moment from "moment";
 import * as SecureStore from 'expo-secure-store';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 
 initializeApp(firebaseConfig);
@@ -801,14 +802,26 @@ function AppBar() {
 
 function CardBalance() {
   const { value, setValue } = useContext(UserContext);
+
+  function superUser(user, balance) {
+    if (user.superUser) {
+      return (
+        <Ionicons name="infinite" color="black" size={45} style={{ marginTop: 5, right: 256, position: "relative" }} />
+        
+      )
+    } else {
+      return balance
+    }
+  }
   return (
+    
     <>
       <VStack borderColor="amber.400"
         borderWidth="1" space="2" bg='amber.300' px="2" justifyContent='space-between' alignItems='center'>
         <Center>
           <HStack >
             <Image style={styles.coinbalance} source={require('../assets/images/coinbalance.png')} />
-            <Text bold style={styles.icon2}>{value.balance}</Text>
+            <Text bold style={styles.icon2}>{superUser(value, value.balance)}</Text>
           </HStack>
         </Center>
       </VStack>
