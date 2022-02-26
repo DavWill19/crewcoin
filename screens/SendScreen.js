@@ -485,6 +485,7 @@ export default function SendScreen() {
 
 function AppBar() {
     const navigation = useNavigation();
+    
     return (
         <>
             <Box safeAreaTop backgroundColor="#f2f2f2" />
@@ -505,13 +506,24 @@ function AppBar() {
 
 function CardBalance() {
     const { value, setValue } = useContext(UserContext);
+
+    function superUser(user, balance) {
+        if (user.superUser) {
+          return (
+            <Ionicons name="infinite" color="#ffcc00" size={55} style={{ top: 1, right: 256, position: "absolute" }} />
+            
+          )
+        } else {
+          return balance
+        }
+      }
     return (
         <>
             <VStack borderColor="gray.300" borderWidth="1" space="4" bg='amber.300' px="2" mb="2" justifyContent='space-between' alignItems='center'>
                 <Center>
                     <HStack >
                         <Image style={styles.coinbalance} source={require('../assets/images/coinbalance.png')} />
-                        <Text style={styles.icon2}>{value.balance}</Text>
+                        <Text style={styles.icon2}>{superUser(value, value.balance)}</Text>
                     </HStack>
                 </Center>
             </VStack>
