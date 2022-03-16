@@ -1,9 +1,8 @@
-import { StyleSheet, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView } from "react-native";
-import { NativeBaseProvider, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button } from 'native-base';
+import { StyleSheet, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
+import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button } from 'native-base';
 import { ScrollView } from "react-native-gesture-handler";
 import prizes from './sample';
-import { useContext, useEffect, useMemo } from "react";
-import { useState } from "react";
+import { useContext, useEffect, useMemo, useCallback, useState } from "react";
 import { UserContext } from "./UserContext";
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
@@ -25,11 +24,57 @@ export default function TabThreeScreen() {
   const { value, setValue } = useContext(UserContext);
   const [prizesData, setPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const isFocused = useIsFocused();
   const [userData, setUser] = useState([]);
   const [adminPushToken, setAdmin] = useState([]);
   const [token, setToken] = useState('');
   const navigation = useNavigation();
+  const [balanceData, setBalance] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+  }
+
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    wait(2000).then(() => setRefreshing(false),
+      fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
+        method: "GET",
+        headers: {
+          authorization: `bearer ${token}`,
+          credentials: "same-origin",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            if (res.prizes.length === prizesData.length) {
+              return null;
+            } else {
+              setPrizes(res.prizes);
+            }
+          } else {
+            Alert.alert(
+              "Something went wrong",
+              `Error`,
+              [
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            );
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        }
+        )
+    )
+  })
+
 
 
   async function getValueFor(key) {
@@ -41,8 +86,6 @@ export default function TabThreeScreen() {
     }
   }
   getValueFor('token');
-  console.log(token);
-
 
   const triggerPushNotificationHandler = (token, title, body) => {
     fetch("https://exp.host/--/api/v2/push/send", {
@@ -82,53 +125,55 @@ export default function TabThreeScreen() {
         return null
       })
 
-      //fetch store items
-      fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
-        method: "GET",
-        headers: {
-          authorization: `bearer ${token}`,
-          credentials: "same-origin",
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          mode: "cors"
-        },
-      })
-        .then(res => res.json())
-        .then(res => {
-          if (res) {
+    //fetch user data
+    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+      method: "GET",
+      headers: {
+        authorization: `bearer ${token}`,
+        credentials: "same-origin",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        mode: "cors"
+      },
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res) {
+          if (res === userData) {
             setUser(res);
             let self = res.filter(user => user.username === value.username);
             setValue(self[0]);
             const admin = res.filter(user => user.admin === true)
             const adminPushToken = admin[0].pushToken;
             setAdmin(adminPushToken);
-            setIsLoading(false);
-          } else {
-            Alert.alert(
-              "Error",
-              "Please check your internet connection",
-              [
-
-                { text: "OK", onPress: () => console.log("OK Pressed") }
-              ]
-            )
-            setIsLoading(false);
           }
-        })
-        .catch(err => {
+          setIsLoading(false);
+        } else {
           Alert.alert(
             "Error",
-            "Please login again",
+            "Please check your internet connection",
             [
+
               { text: "OK", onPress: () => console.log("OK Pressed") }
             ]
           )
-          navigation.navigate("Login");
+          setIsLoading(false);
         }
-        );
+      })
+      .catch(err => {
+        Alert.alert(
+          "Error",
+          "Please login again",
+          [
+            { text: "OK", onPress: () => console.log("OK Pressed") }
+          ]
+        )
+        navigation.navigate("Login");
+      }
+      );
 
-      // update alerts
-      if (value.newStoreItem) {
+    // update alerts
+    if (value.newStoreItem) {
       fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
         method: "PUT",
         headers: {
@@ -170,7 +215,7 @@ export default function TabThreeScreen() {
           )
           navigation.navigate("Login");
         });
-      }                       
+    }
   }, []);
 
 
@@ -218,8 +263,6 @@ export default function TabThreeScreen() {
           const response = await fetch(postData.imageUrl);
           const blob = await response.blob();
           uploadBytes(ref(storage, `${imageName}`), blob);
-          // const url = await ref(`${imageName}`).getDownloadURL();
-          // console.log(url);
         }
         uploadImage();
         setTimeout(() => {
@@ -305,7 +348,6 @@ export default function TabThreeScreen() {
           aspect: [1, 1]
         });
         if (!capturedImage.cancelled) {
-          console.log(capturedImage);
           processImage(capturedImage.uri);
           MediaLibrary.createAssetAsync(capturedImage.uri);
         }
@@ -350,51 +392,60 @@ export default function TabThreeScreen() {
       return (
 
         <>
-          <Box
-            shadow={2}
-            mt="2"
-            mb="2"
-            pt="2"
-            style={styles.image2}
-            maxW="360"
-            rounded="lg"
-            overflow="hidden"
-            borderColor="gray.200"
-            borderWidth="1"
-            _dark={{
-              borderColor: "gray.900",
-              backgroundColor: "gray.900",
-            }}
-            _web={{
-              shadow: 2,
-              borderWidth: 1,
-            }}
-            _light={{
-              backgroundColor: "gray.50",
-            }}
-          >
-            <Stack w="100%" p="4" space={3}>
-              <HStack alignItems="center">
-                <Heading size="md" ml="-1" >
-                  Add New Store Item
-                </Heading>
-                <TouchableOpacity onPress={() => { getImageFromCamera() }}>
-                  <Image mt="4" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { getImageFromGallery() }}>
-                  <Image mt="4" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
-                </TouchableOpacity>
-              </HStack>
-              <Center>
-                {memoizedTempImage}
-              </Center>
-              <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
-              <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
-              <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value })} placeholder="Price" />
+          <PresenceTransition visible initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1,
+            transition: {
+              duration: 250
+            }
+          }}>
+            <Box
+              shadow={2}
+              mt="2"
+              mb="2"
+              pt="2"
+              style={styles.image2}
+              maxW="360"
+              rounded="lg"
+              overflow="hidden"
+              borderColor="gray.200"
+              borderWidth="1"
+              _dark={{
+                borderColor: "gray.900",
+                backgroundColor: "gray.900",
+              }}
+              _web={{
+                shadow: 2,
+                borderWidth: 1,
+              }}
+              _light={{
+                backgroundColor: "gray.50",
+              }}
+            >
+              <Stack w="100%" p="4" space={3}>
+                <HStack alignItems="center">
+                  <Heading size="md" ml="-1" >
+                    Add New Store Item
+                  </Heading>
+                  <TouchableOpacity onPress={() => { getImageFromCamera() }}>
+                    <Image mt="4" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { getImageFromGallery() }}>
+                    <Image mt="4" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
+                  </TouchableOpacity>
+                </HStack>
+                <Center>
+                  {memoizedTempImage}
+                </Center>
+                <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
+                <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
+                <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value })} placeholder="Price" />
 
-              <Button shadow={3} onPress={() => { handlePost(setPrizes) }}> Post New Item</Button>
-            </Stack>
-          </Box>
+                <Button shadow={3} onPress={() => { handlePost(setPrizes) }}> Post New Item</Button>
+              </Stack>
+            </Box>
+          </PresenceTransition>
         </>
       )
     } else {
@@ -405,7 +456,6 @@ export default function TabThreeScreen() {
   const Prizes = () => {
     const { value, setValue } = useContext(UserContext);
     const [prizesData, setPrizes] = useState([]);
-    const [balanceData, setBalance] = useState([]);
     useEffect(() => {
       fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
@@ -421,7 +471,11 @@ export default function TabThreeScreen() {
         .then(res => res.json())
         .then(res => {
           if (res.success) {
-            setPrizes(res.prizes);
+            if (res.prizes.length === prizesData.length) {
+              return null;
+            } else {
+              setPrizes(res.prizes);
+            }
           } else {
             Alert.alert(
               "Something went wrong",
@@ -498,8 +552,6 @@ export default function TabThreeScreen() {
     }
     function buyButton(prize) {
       const amount = value.balance - prize.cost;
-      console.log(amount, "amount")
-
 
       function purchasePrize(prize) {
         if (value.balance >= prize.cost) {
@@ -695,63 +747,72 @@ export default function TabThreeScreen() {
     return (
       prizes.map(prize => {
         return (
-          <Box
-            pt="5"
-            shadow={2}
-            style={styles.image5}
-            mb="2"
-            maxW="360"
-            rounded="lg"
-            overflow="hidden"
-            borderColor="gray.300"
-            borderWidth="1"
-            _dark={{
-              borderColor: "gray.900",
-              backgroundColor: "gray.900",
-            }}
-            _web={{
-              shadow: 2,
-              borderWidth: 0,
-            }}
-            _light={{
-              backgroundColor: "gray.50",
-            }}
-          >
-            <Box>
-              {postImage(prize)}
-            </Box>
-            <Stack w="330" p="2" space={3}>
-              <Stack>
+          <PresenceTransition visible initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1,
+            transition: {
+              duration: 250
+            }
+          }}>
+            <Box
+              pt="5"
+              shadow={2}
+              style={styles.image5}
+              mb="2"
+              maxW="360"
+              rounded="lg"
+              overflow="hidden"
+              borderColor="gray.300"
+              borderWidth="1"
+              _dark={{
+                borderColor: "gray.900",
+                backgroundColor: "gray.900",
+              }}
+              _web={{
+                shadow: 2,
+                borderWidth: 0,
+              }}
+              _light={{
+                backgroundColor: "gray.50",
+              }}
+            >
+              <Box>
+                {postImage(prize)}
+              </Box>
+              <Stack w="330" p="2" space={3}>
+                <Stack>
 
-                <Heading fontSize={16}>
-                  {prize.title}
-                </Heading>
+                  <Heading fontSize={16}>
+                    {prize.title}
+                  </Heading>
 
-              </Stack>
-              <Divider />
-              <Text fontWeight="400" fontSize={14}>
-                {prize.description}
-              </Text>
-              <Divider />
-              <HStack alignItems="center" space={2} justifyContent="space-between">
-                <HStack alignItems="center">
-                  <Text
-                    fontWeight="500"
-                    color="amber.600"
-                    _dark={{
-                      color: "amber.600",
-                    }}
-                    fontWeight="600"
-                    fontSize={16}
-                  >
-                    {coin(prize.cost)}
-                  </Text>
+                </Stack>
+                <Divider />
+                <Text fontWeight="400" fontSize={14}>
+                  {prize.description}
+                </Text>
+                <Divider />
+                <HStack alignItems="center" space={2} justifyContent="space-between">
+                  <HStack alignItems="center">
+                    <Text
+                      fontWeight="500"
+                      color="amber.600"
+                      _dark={{
+                        color: "amber.600",
+                      }}
+                      fontWeight="600"
+                      fontSize={16}
+                    >
+                      {coin(prize.cost)}
+                    </Text>
+                  </HStack>
+                  {buyButton(prize)}
+                  {deleteButton(prize)}
                 </HStack>
-                {buyButton(prize)}
-                {deleteButton(prize)}
-              </HStack>
-            </Stack>
-          </Box>
+              </Stack>
+            </Box>
+          </PresenceTransition>
         )
       })
     )
@@ -768,7 +829,15 @@ export default function TabThreeScreen() {
         <ImageBackground imageStyle=
           {{ opacity: 0.6 }} alt="bg" style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
           {Spinner()}
-          <ScrollView>
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+
+              />
+            }>
             <Example prizes={prizes} />
             <Prizes prizes={prizes} />
           </ScrollView>
@@ -807,14 +876,14 @@ function CardBalance() {
     if (user.superUser) {
       return (
         <Ionicons name="infinite" color="black" size={45} style={{ marginTop: 5, right: 256, position: "relative" }} />
-        
+
       )
     } else {
       return balance
     }
   }
   return (
-    
+
     <>
       <VStack borderColor="amber.400"
         borderWidth="1" space="2" bg='amber.300' px="2" justifyContent='space-between' alignItems='center'>

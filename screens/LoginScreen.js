@@ -63,14 +63,13 @@ export function Login() {
                         <Input type="password" onChangeText={(value) => setData({ ...formData, password: value })} />
                         <Link
                             _text={{
-                                fontSize: "xs",
-                                fontWeight: "500",
                                 color: "indigo.500",
+                                fontWeight: "medium",
+                                fontSize: "sm",
                             }}
-                            alignSelf="flex-end"
-                            mt="1"
+                            href="https://www.crew-coin.com/forgotpassword"
                         >
-                            Forget Password?
+                            Forgot Password?
                         </Link>
                     </FormControl>
                     <Button mt="2" colorScheme="yellow"
@@ -121,7 +120,7 @@ export function Login() {
                                 fontWeight: "medium",
                                 fontSize: "sm",
                             }}
-                            href="www.crew-coin.com"
+                            href="https://www.crew-coin.com"
                         >
                             Setup New Organization
                         </Link>

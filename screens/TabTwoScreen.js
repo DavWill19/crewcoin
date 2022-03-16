@@ -1,8 +1,8 @@
-import { StyleSheet, View, Container, ScrollView, ImageBackground, TouchableOpacity, Alert, KeyboardAvoidingView, FlatList } from "react-native";
-import { NativeBaseProvider, Image, Button, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, VStack, AspectRatio } from 'native-base';
+import { StyleSheet, View, ImageBackground, TouchableOpacity, Alert, KeyboardAvoidingView, FlatList, RefreshControl } from "react-native";
+import { NativeBaseProvider, PresenceTransition, Image, Button, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, VStack, AspectRatio } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import posts from './sample2';
-import { Component, useContext, useEffect, useState, useMemo } from "react";
+import { Component, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { useIsFocused } from '@react-navigation/native';
 import { UserContext } from "./UserContext";
 import moment from "moment";
@@ -18,12 +18,56 @@ import * as SecureStore from 'expo-secure-store';
 
 export default function TabTwoScreen() {
   const { value, setValue } = useContext(UserContext);
-  const [postsData, setPosts] = useState([]);
   const [postData, setPost] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const isFocused = useIsFocused();
   const [userData, setUser] = useState([]);
   const [token2, setToken] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+  }
+
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    wait(2000).then(() => setRefreshing(false),
+      fetch(`https://crewcoin.herokuapp.com/announcements/${value.portalId}`, {
+        method: "GET",
+        headers: {
+          authorization: "jwt",
+          credentials: "same-origin",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            if (res.announcements === postsData) {
+              return null;
+            } else {
+              setPosts(res.announcements);
+            }
+          } else {
+            Alert.alert(
+              "Error",
+              "Please check your internet connection",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        }
+        )
+    )
+  })
 
   async function getValueFor(key) {
     let result = await SecureStore.getItemAsync(key);
@@ -34,7 +78,7 @@ export default function TabTwoScreen() {
     }
   }
   getValueFor('token');
-  console.log(token2);
+
 
   const triggerPushNotificationHandler = (token, title, body) => {
     fetch("https://exp.host/--/api/v2/push/send", {
@@ -54,59 +98,65 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
 
-    if (isFocused) {
-      // Permission for iOS
-      Permissions.getAsync(Permissions.NOTIFICATIONS)
-        .then(statusObj => {
-          // Check if we already have permission
-          if (statusObj.status !== "granted") {
-            // If permission is not there, ask for the same
-            return Permissions.askAsync(Permissions.NOTIFICATIONS)
-          }
-          return statusObj
-        })
-        .then(statusObj => {
-          // If permission is still not given throw error
-          if (statusObj.status !== "granted") {
-            throw new Error("Permission not granted")
-          }
-        })
-        .catch(err => {
-          return null
-        })
-
-      fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
-        method: "GET",
-        headers: {
-          authorization: "jwt",
-          credentials: "same-origin",
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          mode: "cors"
-        },
+    // Permission for iOS
+    Permissions.getAsync(Permissions.NOTIFICATIONS)
+      .then(statusObj => {
+        // Check if we already have permission
+        if (statusObj.status !== "granted") {
+          // If permission is not there, ask for the same
+          return Permissions.askAsync(Permissions.NOTIFICATIONS)
+        }
+        return statusObj
       })
-        .then(res => res.json())
-        .then(res => {
-          if (res) {
+      .then(statusObj => {
+        // If permission is still not given throw error
+        if (statusObj.status !== "granted") {
+          throw new Error("Permission not granted")
+        }
+      })
+      .catch(err => {
+        return null
+      })
+
+    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+      method: "GET",
+      headers: {
+        authorization: "jwt",
+        credentials: "same-origin",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        mode: "cors"
+      },
+    })
+      .then(res => res.json())
+      .then(res => {
+        console.log('it ran')
+        if (res) {
+          if (res === [userData]) {
+            console.log(res.length);
+          }
+          else {
             setUser(res);
             let self = res.filter(user => user.username === value.username);
-            setValue(self[0]);
-          } else {
-            Alert.alert(
-              "Error",
-              "Please check your internet connection",
-              [
-
-                { text: "OK", onPress: () => console.log("OK Pressed") }
-              ]
-            )
+            if (self[0] === !value) {
+              setValue(self[0]);
+            }
           }
-        })
-        .catch(err => {
-          console.log(err);
+        } else {
+          Alert.alert(
+            "Error",
+            "Please check your internet connection",
+            [
+
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          )
         }
-        );
-    }
+      })
+      .catch(err => {
+        console.log(err);
+      }
+      );
     if (value.newAnnouncement) {
       fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
         method: "PUT",
@@ -164,254 +214,15 @@ export default function TabTwoScreen() {
     }
   }
 
-
-  function Post() {
-    const imageUrl = postData.imageUrl;
-    const [textData, setText] = useState([]);
-    const [postsData, setPosts] = useState([]);
-
-    function handlePost() {
-      let removeAdmin = userData.filter(el => el.admin === false);
-      let user = removeAdmin.filter(el => el.username !== value.username && el.pushToken.length > 0);
-      let usersPushtoken = user.map(el => el.pushToken);  // get all pushtoken  of users  
-
-      if (!textData.title || !textData.announcement) {
-        Alert.alert("Please fill in all fields!");
-      } else {
-        if (postData.imageUrl) {
-          const imageName = `${value.portalId}_post_${moment(new Date).format("MMDDYYYYhmma")}`
-          const storage = getStorage();
-          const uploadImage = async () => {
-            const img = postData.imageUrl;
-            const response = await fetch(postData.imageUrl);
-            const blob = await response.blob();
-            uploadBytes(ref(storage, `${imageName}`), blob);
-          }
-          setIsLoading(true);
-          uploadImage();
-          setTimeout(() => {
-            getDownloadURL(ref(storage, `${imageName}`))
-              .then((url) => {
-                fetch(`https://crewcoin.herokuapp.com/announcements`, {
-                  method: "POST",
-                  headers: {
-                    authorization: "jwt",
-                    credentials: "same-origin",
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    mode: "cors"
-                  },
-                  body: JSON.stringify({
-                    "title": textData.title,
-                    "description": textData.announcement,
-                    "image": url,
-                    "portalId": value.portalId,
-                  }),
-                })
-
-                  .then(res => res.json())
-                  .then(res => {
-                    if (res.success) {
-                      triggerPushNotificationHandler(usersPushtoken, `New Announcement: ${textData.title}`, textData.announcement);
-                      setPosts(postsData => [...postsData, res.announcements])
-                      setPost({ imageUrl: "" });
-                      setText({ title: "", announcement: "" });
-                    } else {
-                      Alert.alert(
-                        "Something went wrong",
-                        `Error`,
-                        [
-                          { text: "OK", onPress: () => console.log("OK Pressed") }
-                        ]
-                      );
-                    }
-                  })
-                  .catch(err => {
-                    Alert.alert(
-                      `Error`,
-                      "Please check internet connection!",
-                      [
-
-                        { text: "OK", onPress: () => console.log("OK Pressed") }
-                      ]
-                    )
-                  }
-                  );
-              })
-              .catch((error) => {
-                console.log(error);
-                Alert.alert(
-                  `Error`,
-                  "Please check internet connection!",
-                  [
-
-                    { text: "OK", onPress: () => console.log("OK Pressed") }
-                  ]
-                )
-                // Handle any errors
-              })
-            setIsLoading(false);
-          }, 3000);
-        } else {
-          setTimeout(() => {
-          setIsLoading(true);
-          fetch(`https://crewcoin.herokuapp.com/announcements`, {
-            method: "POST",
-            headers: {
-              authorization: "jwt",
-              credentials: "same-origin",
-              Accept: "application/json",
-              "Content-Type": "application/json",
-              mode: "cors"
-            },
-            body: JSON.stringify({
-              "title": textData.title,
-              "description": textData.announcement,
-              "portalId": value.portalId,
-            }),
-          })
-            .then(res => res.json())
-            .then(res => {
-              if (res.success) {
-                triggerPushNotificationHandler(usersPushtoken, `New Announcement: ${textData.title}`, textData.announcement);
-                setPosts(postsData => [...postsData, res.announcements])
-                setPost({ imageUrl: "" });
-                setText({ title: "", announcement: "" });
-              } else {
-                Alert.alert(
-                  "Something went wrong",
-                  `Error`,
-                  [
-                    { text: "OK", onPress: () => console.log("OK Pressed") }
-                  ]
-                );
-              }
-            })
-            .catch(err => {
-              Alert.alert(
-                `Error`,
-                "Please check internet connection!",
-                [
-
-                  { text: "OK", onPress: () => console.log("OK Pressed") }
-                ]
-              )
-            });
-          setIsLoading(false);
-        }, 1000);
-        } 
-      }
-
-    }
-
-    let getImageFromCamera = async () => {
-      const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
-      const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-
-      if (cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
-        const capturedImage = await ImagePicker.launchCameraAsync({
-          allowsEditing: true,
-          aspect: [1, 1]
-        });
-        if (!capturedImage.cancelled) {
-          processImage(capturedImage.uri);
-          MediaLibrary.createAssetAsync(capturedImage.uri);
-        }
-      }
-    }
-    let getImageFromGallery = async () => {
-      const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
-      const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-
-      if (cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
-        const capturedImage = await ImagePicker.launchImageLibraryAsync({
-          allowsEditing: true,
-          aspect: [1, 1]
-        });
-        if (!capturedImage.cancelled) {
-          processImage(capturedImage.uri);
-        }
-      }
-    }
-    let processImage = async (imgUri) => {
-      const processedImage = await ImageManipulator.manipulateAsync(imgUri,
-        [{ resize: { width: 400 } }],
-        { format: ImageManipulator.SaveFormat.PNG }
-      );
-      setPost({ ...postData, imageUrl: processedImage.uri })
-    }
-    function TempImage() {
-      if (imageUrl) {
-        return (
-          <Image alt="temp" shadow={9} style={{ width: 300, height: 300, borderRadius: 5, }}
-            source={{ uri: imageUrl }} resizeMode="contain" />
-        )
-      } else {
-        return null;
-      }
-    }
-    const memoizedTempImage = useMemo(TempImage);
-
-    if (value.admin) {
-      return (
-        <>
-          <Box
-            shadow={2}
-            mt="2"
-            mb="2"
-            pt="2"
-            style={styles.image2}
-            maxW="360"
-            rounded="lg"
-            overflow="hidden"
-            borderColor="gray.300"
-            borderWidth="1"
-            _dark={{
-              borderColor: "gray.900",
-              backgroundColor: "gray.900",
-            }}
-            _web={{
-              shadow: 2,
-              borderWidth: 0,
-            }}
-            _light={{
-              backgroundColor: "gray.50",
-            }}
-          >
-            <Stack w="100%" px="5" py="3" space={3}>
-              <HStack alignItems="center">
-                <Heading size="md" ml="-1" >
-                  New Announcement
-                </Heading>
-                <TouchableOpacity onPress={() => { getImageFromCamera() }}>
-                  <Image mt="4" alt="camera1" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { getImageFromGallery() }}>
-                  <Image mt="4" alt="camera2" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
-                </TouchableOpacity>
-              </HStack>
-              <Center>
-                {memoizedTempImage}
-              </Center>
-              <Input value={textData.title} onChangeText={(value) => setText({ ...textData, title: value })} placeholder="Title" />
-              <Input value={textData.announcement} onChangeText={(value) => setText({ ...textData, announcement: value })} placeholder="Announcement" />
-              <Button shadow={3} onPress={() => { handlePost() }}> Post </Button>
-            </Stack>
-          </Box>
-        </>
-      )
-    } else {
-      return null
-    }
-  }
-
-
   function Posts() {
     const [postsData, setPosts] = useState([]);
     const [postData, setPost] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+    console.log("posts rendered")
 
     useEffect(() => {
-      fetch(`https://crewcoin.herokuapp.com/announcements`, {
+      setIsLoading(true);
+      fetch(`https://crewcoin.herokuapp.com/announcements/${value.portalId}`, {
         method: "GET",
         headers: {
           authorization: "jwt",
@@ -424,8 +235,13 @@ export default function TabTwoScreen() {
 
         .then(res => res.json())
         .then(res => {
+          console.log('it ran')
           if (res.success) {
-            setPosts(res.announcements);
+            if (res.announcements === postsData) {
+              return null;
+            } else {
+              setPosts(res.announcements);
+            }
           } else {
             Alert.alert(
               "Something went wrong",
@@ -446,15 +262,15 @@ export default function TabTwoScreen() {
           )
         }
         );
+      setIsLoading(false);
 
-    }, [userData]);
-
-
+    }, []);
     let posts = postsData.sort(function (a, b) {
       // Turn your strings into dates, and then subtract them
       // to get a value that is either negative, positive, or zero.
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+
     function deleteButton(posts) {
       if (value.admin) {
         return (
@@ -606,67 +422,79 @@ export default function TabTwoScreen() {
     }
     return (
       <>
-
         <FlatList
+
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+
           data={postsData}
           renderItem={({ item, index }) =>
-            <Box
-              pt="5"
-              shadow={2}
-              style={styles.image2}
-              mb="2"
-              maxW="360"
-              rounded="lg"
-              overflow="hidden"
-              borderColor="gray.300"
-              borderWidth="1"
-              _dark={{
-                borderColor: "gray.900",
-                backgroundColor: "gray.900",
-              }}
-              _web={{
-                shadow: 2,
-                borderWidth: 0,
-              }}
-              _light={{
-                backgroundColor: "gray.50",
-              }}
-            >
-              <Box pt="0">
-                {showImage(item)}
-              </Box>
-              <Stack w="330" p="1" space={3}>
-                <Stack>
-                  <Center>
-                    <Heading size="lg">
-                      {item.title}
-                    </Heading>
-                  </Center>
-                </Stack>
-                <Divider />
-                <Text fontWeight="400" fontSize={17}>
-                  {item.description}
-                </Text>
-                <Divider />
-                <HStack alignItems="center" space={2} justifyContent="space-between">
-                  <HStack alignItems="center">
+            <PresenceTransition visible initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1,
+              transition: {
+                duration: 250
+              }
+            }}>
+              <Box
+                pt="5"
+                shadow={2}
+                style={styles.image2}
+                mb="2"
+                maxW="360"
+                rounded="lg"
+                overflow="hidden"
+                borderColor="gray.300"
+                borderWidth="1"
+                _dark={{
+                  borderColor: "gray.900",
+                  backgroundColor: "gray.900",
+                }}
+                _web={{
+                  shadow: 2,
+                  borderWidth: 0,
+                }}
+                _light={{
+                  backgroundColor: "gray.50",
+                }}
+              >
+                <Box pt="0">
+                  {showImage(item)}
+                </Box>
+                <Stack w="330" p="1" space={3}>
+                  <Stack>
+                    <Center>
+                      <Heading size="lg">
+                        {item.title}
+                      </Heading>
+                    </Center>
+                  </Stack>
+                  <Divider />
+                  <Text fontWeight="400" fontSize={17}>
+                    {item.description}
+                  </Text>
+                  <Divider />
+                  <HStack alignItems="center" space={2} justifyContent="space-between">
+                    <HStack alignItems="center">
 
-                    <Image style={styles.coin2} alt="icon" source={require('../assets/images/icon3.gif')} />
-                    <Text
-                      color="yellow.600"
-                      _dark={{
-                        color: "warmGray.200",
-                      }}
-                      fontWeight="400"
-                      bold="true"
-                    >
-                      {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
-                    </Text>
+                      <Image style={styles.coin2} alt="icon" source={require('../assets/images/icon3.gif')} />
+                      <Text
+                        color="yellow.600"
+                        _dark={{
+                          color: "warmGray.200",
+                        }}
+                        fontWeight="400"
+                        bold="true"
+                      >
+                        {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
+                      </Text>
+                    </HStack>
+                    {deleteButton(item)}
                   </HStack>
-                  {deleteButton(item)}
-                </HStack>
-              </Stack>
-            </Box>
+                </Stack>
+              </Box>
+            </PresenceTransition>
           }
           ListHeaderComponent={() => Post()}
           keyExtractor={item => item._id}
@@ -685,12 +513,272 @@ export default function TabTwoScreen() {
           {{ opacity: 0.5 }} alt="bg" style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
           {Spinner()}
           <View>
-            <Posts />
+            <PresenceTransition visible initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1,
+              transition: {
+                duration: 250
+              }
+            }}>
+              <Posts />
+            </PresenceTransition>
           </View>
         </ImageBackground>
       </NativeBaseProvider>
     </KeyboardAvoidingView>
   );
+  function Post() {
+    const imageUrl = postData.imageUrl;
+    const [textData, setText] = useState([]);
+    const [postsData, setPosts] = useState([]);
+    console.log("post rendered")
+
+    function handlePost() {
+      let removeAdmin = userData.filter(el => el.admin === false);
+      let user = removeAdmin.filter(el => el.username !== value.username && el.pushToken.length > 0);
+      let usersPushtoken = user.map(el => el.pushToken);  // get all pushtoken  of users  
+
+      if (!textData.title || !textData.announcement) {
+        Alert.alert("Please fill in all fields!");
+      } else {
+        if (postData.imageUrl) {
+          const imageName = `${value.portalId}_post_${moment(new Date).format("MMDDYYYYhmma")}`
+          const storage = getStorage();
+          const uploadImage = async () => {
+            const img = postData.imageUrl;
+            const response = await fetch(postData.imageUrl);
+            const blob = await response.blob();
+            uploadBytes(ref(storage, `${imageName}`), blob);
+          }
+          setIsLoading(true);
+          uploadImage();
+          setTimeout(() => {
+            getDownloadURL(ref(storage, `${imageName}`))
+              .then((url) => {
+                fetch(`https://crewcoin.herokuapp.com/announcements`, {
+                  method: "POST",
+                  headers: {
+                    authorization: "jwt",
+                    credentials: "same-origin",
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    mode: "cors"
+                  },
+                  body: JSON.stringify({
+                    "title": textData.title,
+                    "description": textData.announcement,
+                    "image": url,
+                    "portalId": value.portalId,
+                  }),
+                })
+
+                  .then(res => res.json())
+                  .then(res => {
+                    if (res.success) {
+                      triggerPushNotificationHandler(usersPushtoken, `New Announcement: ${textData.title}`, textData.announcement);
+                      setPosts(postsData => [...postsData, res.announcements])
+                      setPost({ imageUrl: "" });
+                      setText({ title: "", announcement: "" });
+                    } else {
+                      Alert.alert(
+                        "Something went wrong",
+                        `Error`,
+                        [
+                          { text: "OK", onPress: () => console.log("OK Pressed") }
+                        ]
+                      );
+                    }
+                  })
+                  .catch(err => {
+                    Alert.alert(
+                      `Error`,
+                      "Please check internet connection!",
+                      [
+
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                      ]
+                    )
+                  }
+                  );
+              })
+              .catch((error) => {
+                console.log(error);
+                Alert.alert(
+                  `Error`,
+                  "Please check internet connection!",
+                  [
+
+                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                  ]
+                )
+                // Handle any errors
+              })
+            setIsLoading(false);
+          }, 3000);
+        } else {
+          setTimeout(() => {
+            setIsLoading(true);
+            fetch(`https://crewcoin.herokuapp.com/announcements`, {
+              method: "POST",
+              headers: {
+                authorization: "jwt",
+                credentials: "same-origin",
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                mode: "cors"
+              },
+              body: JSON.stringify({
+                "title": textData.title,
+                "description": textData.announcement,
+                "portalId": value.portalId,
+              }),
+            })
+              .then(res => res.json())
+              .then(res => {
+                if (res.success) {
+                  triggerPushNotificationHandler(usersPushtoken, `New Announcement: ${textData.title}`, textData.announcement);
+                  setPosts(postsData => [...postsData, res.announcements])
+                  setPost({ imageUrl: "" });
+                  setText({ title: "", announcement: "" });
+                } else {
+                  Alert.alert(
+                    "Something went wrong",
+                    `Error`,
+                    [
+                      { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                  );
+                }
+              })
+              .catch(err => {
+                Alert.alert(
+                  `Error`,
+                  "Please check internet connection!",
+                  [
+
+                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                  ]
+                )
+              });
+            setIsLoading(false);
+          }, 1000);
+        }
+      }
+
+    }
+
+    let getImageFromCamera = async () => {
+      const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
+      const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+      if (cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
+        const capturedImage = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1]
+        });
+        if (!capturedImage.cancelled) {
+          processImage(capturedImage.uri);
+          MediaLibrary.createAssetAsync(capturedImage.uri);
+        }
+      }
+    }
+    let getImageFromGallery = async () => {
+      const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
+      const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+      if (cameraPermission.status === 'granted' && cameraRollPermission.status === 'granted') {
+        const capturedImage = await ImagePicker.launchImageLibraryAsync({
+          allowsEditing: true,
+          aspect: [1, 1]
+        });
+        if (!capturedImage.cancelled) {
+          processImage(capturedImage.uri);
+        }
+      }
+    }
+    let processImage = async (imgUri) => {
+      const processedImage = await ImageManipulator.manipulateAsync(imgUri,
+        [{ resize: { width: 400 } }],
+        { format: ImageManipulator.SaveFormat.PNG }
+      );
+      setPost({ ...postData, imageUrl: processedImage.uri })
+    }
+    function TempImage() {
+      if (imageUrl) {
+        return (
+          <Image alt="temp" shadow={9} style={{ width: 300, height: 300, borderRadius: 5, }}
+            source={{ uri: imageUrl }} resizeMode="contain" />
+        )
+      } else {
+        return null;
+      }
+    }
+    const memoizedTempImage = useMemo(TempImage);
+
+    if (value.admin) {
+      return (
+        <>
+          <PresenceTransition visible initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1,
+            transition: {
+              duration: 250
+            }
+          }}>
+            <Box
+              shadow={2}
+              mt="2"
+              mb="2"
+              pt="2"
+              style={styles.image2}
+              maxW="360"
+              rounded="lg"
+              overflow="hidden"
+              borderColor="gray.300"
+              borderWidth="1"
+              _dark={{
+                borderColor: "gray.900",
+                backgroundColor: "gray.900",
+              }}
+              _web={{
+                shadow: 2,
+                borderWidth: 0,
+              }}
+              _light={{
+                backgroundColor: "gray.50",
+              }}
+            >
+              <Stack w="100%" px="5" py="3" space={3}>
+                <HStack alignItems="center">
+                  <Heading size="md" ml="-1" >
+                    New Announcement
+                  </Heading>
+                  <TouchableOpacity onPress={() => { getImageFromCamera() }}>
+                    <Image mt="4" alt="camera1" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { getImageFromGallery() }}>
+                    <Image mt="4" alt="camera2" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
+                  </TouchableOpacity>
+                </HStack>
+                <Center>
+                  {memoizedTempImage}
+                </Center>
+                <Input value={textData.title} onChangeText={(value) => setText({ ...textData, title: value })} placeholder="Title" />
+                <Input multiline={true} value={textData.announcement} onChangeText={(value) => setText({ ...textData, announcement: value })} placeholder="Announcement" />
+                <Button shadow={3} onPress={() => { handlePost() }}> Post </Button>
+              </Stack>
+            </Box>
+          </PresenceTransition>
+        </>
+
+      )
+    } else {
+      return null
+    }
+  }
+
 }
 
 function AppBar() {

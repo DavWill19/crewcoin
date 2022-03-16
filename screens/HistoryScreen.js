@@ -142,9 +142,9 @@ export default function HistoryScreen({ route, navigation }) {
             return new Date(b.date) - new Date(a.date);
         });
         return (
-                      <FlatList
-          data={history}
-          renderItem={({ item }) => 
+            <FlatList
+                data={history}
+                renderItem={({ item }) =>
                     <Box
                         shadow={2}
                         mt="2"
@@ -240,9 +240,9 @@ export default function HistoryScreen({ route, navigation }) {
                             </Stack>
                         </Center>
                     </Box>
-            }
-            keyExtractor={item => item.id}
-        />
+                }
+                keyExtractor={item => item.date}
+            />
         )
     }
 
@@ -255,8 +255,8 @@ export default function HistoryScreen({ route, navigation }) {
                 {{ opacity: 0.3 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
                 {Spinner()}
 
-                    <Divider />
-                    <HistoryList />
+                <Divider />
+                <HistoryList />
 
             </ImageBackground>
         </NativeBaseProvider>
