@@ -38,7 +38,7 @@ export default function TabThreeScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    wait(2000).then(() => setRefreshing(false),
+    wait(100).then(() => setRefreshing(false),
       fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
         headers: {
@@ -72,7 +72,52 @@ export default function TabThreeScreen() {
           console.log(err);
         }
         )
+
     )
+    if (value.newStoreItem) {
+      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
+        method: "PUT",
+        headers: {
+          //bearer token
+          authorization: `bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "newStoreItem": false,
+          "newTransaction": value.newTransaction,
+          "newAnnouncement": value.newAnnouncement,
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            setValue(res.crewuser);
+          } else {
+            Alert.alert(
+              `${err}`,
+              "Please check internet connection!",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          Alert.alert(
+            "Error",
+            "Please login again",
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          )
+          navigation.navigate("Login");
+        });
+    }
+    
   })
 
 
@@ -139,13 +184,14 @@ export default function TabThreeScreen() {
       .then(res => res.json())
       .then(res => {
         if (res) {
-          if (res === userData) {
+          if (res !== userData) {
             setUser(res);
             let self = res.filter(user => user.username === value.username);
             setValue(self[0]);
             const admin = res.filter(user => user.admin === true)
-            const adminPushToken = admin[0].pushToken;
-            setAdmin(adminPushToken);
+            const adminPush = admin.map(el => el.pushToken)
+            setAdmin(adminPush);
+            console.log("adminpush", adminPush);
           }
           setIsLoading(false);
         } else {
@@ -236,8 +282,7 @@ export default function TabThreeScreen() {
     const imageUrl = postData.imageUrl;
 
     function handlePost(setPrizes) {
-      let removeAdmin = userData.filter(el => el.admin === false);
-      let user = removeAdmin.filter(el => el.username !== value.username && el.pushToken.length > 0);
+      let user = userData.filter(el => el.username !== value.username && el.pushToken.length > 0);
       let usersPushtoken = user.map(el => el.pushToken);
 
       function coin(cost) {
@@ -256,7 +301,7 @@ export default function TabThreeScreen() {
         Alert.alert("Please fill in all fields and add photo! Cost must be a number!");
       } else {
         setIsLoading(true);
-        const imageName = `${value.portalId}_prize_${moment(new Date).format("MMDDYYYYhmma")}`
+        const imageName = `${value.portalId}_prize_${moment(new Date).format("MMDDYYYYhmmssa")}`
         const storage = getStorage();
         const uploadImage = async () => {
           const img = postData.imageUrl;
@@ -397,7 +442,7 @@ export default function TabThreeScreen() {
           }} animate={{
             opacity: 1,
             transition: {
-              duration: 250
+              duration: 2500
             }
           }}>
             <Box
@@ -409,7 +454,7 @@ export default function TabThreeScreen() {
               maxW="360"
               rounded="lg"
               overflow="hidden"
-              borderColor="gray.200"
+              borderColor="gray.300"
               borderWidth="1"
               _dark={{
                 borderColor: "gray.900",
@@ -752,7 +797,7 @@ export default function TabThreeScreen() {
           }} animate={{
             opacity: 1,
             transition: {
-              duration: 250
+              duration: 2050
             }
           }}>
             <Box

@@ -33,6 +33,7 @@ export const Signup = () => {
     const [formData, setData] = React.useState({});
     const [user, setUser] = React.useState({});
     const [isLoading, setIsLoading] = React.useState(false);
+    //loading spinner
     function Spinner() {
         if (isLoading) {
             return (
@@ -41,6 +42,7 @@ export const Signup = () => {
             )
         }
     }
+    //register for expo push notifications
     registerForPushNotificationsAsync = async () => {
         if (Platform.OS === 'android' || Platform.OS === 'ios') {
           const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -106,6 +108,7 @@ export const Signup = () => {
 
     return (
         <Box backgroundColor="#fff" safeArea p="2" py="4" w="80%" maxW="100%">
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
@@ -198,7 +201,7 @@ export const Signup = () => {
                                     fontWeight: "medium",
                                     fontSize: "sm",
                                 }}
-                                href="https://www.crew-coin.com"
+                                href="https://www.crew-coin.com/#/signup"
                             >
                                 Setup New Organization
                             </Link>
@@ -268,7 +271,7 @@ function handleSubmit(formData, navigation, setUser, setValue, setIsLoading) {
             } else {
                 Alert.alert(
                     "Error",
-                    `${res.err.message}`,
+                    `${res.message}`,
                     [
                         {
                             text: "Cancel",

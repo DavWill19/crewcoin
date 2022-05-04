@@ -242,8 +242,8 @@ export default function SendScreen() {
 
         }, []);
         //set users for send screen minus current user
-        let removeAdmin = userData.filter(el => el.admin === false);
-        let user = removeAdmin.filter(el => el.username !== value.username);
+
+        let user = userData.filter(el => el.username !== value.username);
 
         //map users list to send screen
         return (
@@ -296,103 +296,111 @@ export default function SendScreen() {
                         [user._id + user.username]: coinincrease
                     })
                     const secondAmount = value.balance - coinincrease;
-                    //need to fix this... update user balance
-                    if (value.balance >= coinincrease) {
-                        if (coinincrease > 0) {
+                    if (coinincrease > 0) {
+                        if (value.balance >= coinincrease) {
+                            if (coinincrease > 0) {
 
-                            fetch(`https://crewcoin.herokuapp.com/crewuser/send/${userId}`, {
-                                method: "PUT",
-                                headers: {
-                                    //bearer token
-                                    authorization: `bearer ${token}`,
-                                    Accept: "application/json",
-                                    "Content-Type": "application/json",
-                                    mode: "cors"
-                                },
-                                body: JSON.stringify({
-                                    "coinincrease": coinincrease,
-                                    "balance": secondAmount,
-                                    "balance2": amount,
-                                    "history": {
-                                        "date": new Date(),
-                                        "action": "Received",
-                                        "amount": coinincrease,
-                                        "balance": amount,
-                                        "comments": comment,
-                                        "who": `from ${value.firstname} ${value.lastname}`
+                                fetch(`https://crewcoin.herokuapp.com/crewuser/send/${userId}`, {
+                                    method: "PUT",
+                                    headers: {
+                                        //bearer token
+                                        authorization: `bearer ${token}`,
+                                        Accept: "application/json",
+                                        "Content-Type": "application/json",
+                                        mode: "cors"
                                     },
-                                    "history2": {
-                                        "date": new Date(),
-                                        "action": "Sent",
-                                        "amount": coinincrease,
+                                    body: JSON.stringify({
+                                        "coinincrease": coinincrease,
                                         "balance": secondAmount,
-                                        "comments": comment,
-                                        "who": `to ${user.firstname} ${user.lastname}`
-                                    },
-                                    "userId": value._id,
-                                }),
-                            })
+                                        "balance2": amount,
+                                        "history": {
+                                            "date": new Date(),
+                                            "action": "Received",
+                                            "amount": coinincrease,
+                                            "balance": amount,
+                                            "comments": comment,
+                                            "who": `from ${value.firstname} ${value.lastname}`
+                                        },
+                                        "history2": {
+                                            "date": new Date(),
+                                            "action": "Sent",
+                                            "amount": coinincrease,
+                                            "balance": secondAmount,
+                                            "comments": comment,
+                                            "who": `to ${user.firstname} ${user.lastname}`
+                                        },
+                                        "userId": value._id,
+                                    }),
+                                })
 
-                                .then(res => res.json())
-                                .then(res => {
-                                    if (res.success) {
-                                        const message = `${value.firstname} ${value.lastname} sent you ${coin(coinincrease)}!`;
-                                        triggerPushNotificationHandler(user.pushToken, `Cha-Ching!`, message);
-                                        setData({ ...formData, [userId]: "", [userId + username]: coinincrease }),
-                                            reload()
-                                        Alert.alert(
-                                            "Coins Sent!",
-                                            `You sent ${coin(coinincrease)} to ${user.firstname + " " + user.lastname}`,
-                                            [
-                                                {
-                                                    text: "Cancel",
-                                                    onPress: () => console.log("Cancel Pressed"),
-                                                    style: "cancel"
-                                                },
-                                                { text: "OK", onPress: () => console.log("OK Pressed") }
-                                            ]
-                                        );
-                                    } else {
-                                        Alert.alert(
-                                            `${err}`,
-                                            "Please check internet connection!",
-                                            [
+                                    .then(res => res.json())
+                                    .then(res => {
+                                        if (res.success) {
+                                            const message = `${value.firstname} ${value.lastname} sent you ${coin(coinincrease)}!`;
+                                            triggerPushNotificationHandler(user.pushToken, `Cha-Ching!`, message);
+                                            setData({ ...formData, [userId]: "", [userId + username]: coinincrease }),
+                                                reload()
+                                            Alert.alert(
+                                                "Coins Sent!",
+                                                `You sent ${coin(coinincrease)} to ${user.firstname + " " + user.lastname}`,
+                                                [
+                                                    {
+                                                        text: "Cancel",
+                                                        onPress: () => console.log("Cancel Pressed"),
+                                                        style: "cancel"
+                                                    },
+                                                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                                                ]
+                                            );
+                                        } else {
+                                            Alert.alert(
+                                                `${err}`,
+                                                "Please check internet connection!",
+                                                [
 
+                                                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                                                ]
+                                            )
+                                        }
+                                    })
+                                    .catch(err => {
+                                        Alert.alert(
+                                            "Error",
+                                            "Please login again",
+                                            [
                                                 { text: "OK", onPress: () => console.log("OK Pressed") }
                                             ]
                                         )
+                                        navigation.navigate("Login");
                                     }
-                                })
-                                .catch(err => {
-                                    Alert.alert(
-                                        "Error",
-                                        "Please login again",
-                                        [
-                                            { text: "OK", onPress: () => console.log("OK Pressed") }
-                                        ]
-                                    )
-                                    navigation.navigate("Login");
-                                }
-                                );
-                        } else {
-                            return null
+                                    );
+                            } else {
+                                return null
+                            }
                         }
-                    }
-                    else {
+                        else {
+                            Alert.alert(
+                                "You need more crew coins!",
+                                `You do not have enough crew coins! Current balance: ${value.balance}`,
+                                [
+                                    {
+                                        text: "Cancel",
+                                        onPress: () => console.log("Cancel Pressed"),
+                                        style: "cancel"
+                                    },
+                                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                                ]
+                            );
+                        }
+                    } else {
                         Alert.alert(
-                            "You need more crew coins!",
-                            `You do not have enough crew coins! Current balance: ${value.balance}`,
+                            "You need to enter a number!",
+                            `Enter amount of coins you would like to send!`,
                             [
-                                {
-                                    text: "Cancel",
-                                    onPress: () => console.log("Cancel Pressed"),
-                                    style: "cancel"
-                                },
                                 { text: "OK", onPress: () => console.log("OK Pressed") }
                             ]
                         );
                     }
-
                 }
                 function startFunc(data) {
                     if (data == undefined) {
@@ -400,7 +408,7 @@ export default function SendScreen() {
                     } else {
                         return (data + 0)
                     }
-                    
+
                 }
 
                 return (
@@ -485,7 +493,7 @@ export default function SendScreen() {
 
 function AppBar() {
     const navigation = useNavigation();
-    
+
     return (
         <>
             <Box safeAreaTop backgroundColor="#f2f2f2" />
@@ -509,14 +517,14 @@ function CardBalance() {
 
     function superUser(user, balance) {
         if (user.superUser) {
-          return (
-            <Ionicons name="infinite" color="#ffcc00" size={55} style={{ top: 1, right: 256, position: "absolute" }} />
-            
-          )
+            return (
+                <Ionicons name="infinite" color="#ffcc00" size={55} style={{ top: 1, right: 256, position: "absolute" }} />
+
+            )
         } else {
-          return balance
+            return balance
         }
-      }
+    }
     return (
         <>
             <VStack borderColor="gray.300" borderWidth="1" space="4" bg='amber.300' px="2" mb="2" justifyContent='space-between' alignItems='center'>

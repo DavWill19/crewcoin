@@ -52,7 +52,6 @@ export default function TabOneScreen({ route, navigation }) {
         if (res) {
           setUser(res);
           let self = res.filter(user => user.username === value.username);
-          // setValue(self[0]);
           let admin = res.filter(user => user.admin === true);
           setValue({ ...value, balance: self[0].balance, adminEmail: admin[0].username, organization: admin[0].organization });
           setOrganization(admin[0].organization);
@@ -222,9 +221,14 @@ export default function TabOneScreen({ route, navigation }) {
   }
   // delay for 1 second
   function Circulation(user) {
-    const users = user
+    const users = user;
+    const adminUsers = users.filter(user => user.admin === true);
+    const adminBalance = adminUsers.reduce((accumulator, object) => {
+      return accumulator + object.balance;
+    }, 0);
+    console.log("users", users);
     let userTotal = users.reduce((accumulator, current) => accumulator + current.balance, 0)
-    let circulationTotal = userTotal - value.balance
+    let circulationTotal = userTotal - adminBalance;
     if (value.admin && circulationTotal > -1) {
       return (
         <Center>
@@ -389,7 +393,7 @@ export default function TabOneScreen({ route, navigation }) {
                       <Heading color="#292A2A" size="lg" mx="auto" my="auto">
                         My Transactions
                       </Heading>
-                      {alertNew(value.newStoreItem)}
+                      {alertNew(value.newTransaction)}
                     </HStack>
                   </TouchableOpacity>
                 </Box>

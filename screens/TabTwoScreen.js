@@ -31,7 +31,8 @@ export default function TabTwoScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    wait(2000).then(() => setRefreshing(false),
+    wait(100).then(() => setRefreshing(false),
+    
       fetch(`https://crewcoin.herokuapp.com/announcements/${value.portalId}`, {
         method: "GET",
         headers: {
@@ -66,7 +67,51 @@ export default function TabTwoScreen() {
           console.log(err);
         }
         )
+        
     )
+    if (value.newAnnouncement) {
+      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
+        method: "PUT",
+        headers: {
+          //bearer token
+          authorization: `bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "newStoreItem": value.newStoreItem,
+          "newTransaction": value.newTransaction,
+          "newAnnouncement": false,
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            setValue(res.crewuser);
+          } else {
+            Alert.alert(
+              `${err}`,
+              "Please check internet connection!",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          Alert.alert(
+            "Error",
+            "Please login again",
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          )
+          navigation.navigate("Login");
+        });
+    }
   })
 
   async function getValueFor(key) {
@@ -434,7 +479,7 @@ export default function TabTwoScreen() {
             }} animate={{
               opacity: 1,
               transition: {
-                duration: 250
+                duration: 2050
               }
             }}>
               <Box
@@ -510,7 +555,7 @@ export default function TabTwoScreen() {
       <NativeBaseProvider>
         <AppBar />
         <ImageBackground imageStyle=
-          {{ opacity: 0.5 }} alt="bg" style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+                    {{ opacity: 0.7 }} style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
           {Spinner()}
           <View>
             <PresenceTransition visible initial={{
@@ -518,7 +563,7 @@ export default function TabTwoScreen() {
             }} animate={{
               opacity: 1,
               transition: {
-                duration: 250
+                duration: 1050
               }
             }}>
               <Posts />
@@ -535,15 +580,15 @@ export default function TabTwoScreen() {
     console.log("post rendered")
 
     function handlePost() {
-      let removeAdmin = userData.filter(el => el.admin === false);
-      let user = removeAdmin.filter(el => el.username !== value.username && el.pushToken.length > 0);
+      
+      let user = userData.filter(el => el.username !== value.username && el.pushToken.length > 0);
       let usersPushtoken = user.map(el => el.pushToken);  // get all pushtoken  of users  
 
       if (!textData.title || !textData.announcement) {
         Alert.alert("Please fill in all fields!");
       } else {
         if (postData.imageUrl) {
-          const imageName = `${value.portalId}_post_${moment(new Date).format("MMDDYYYYhmma")}`
+          const imageName = `${value.portalId}_post_${moment(new Date).format("MMDDYYYYhmmssa")}`
           const storage = getStorage();
           const uploadImage = async () => {
             const img = postData.imageUrl;
@@ -724,7 +769,7 @@ export default function TabTwoScreen() {
           }} animate={{
             opacity: 1,
             transition: {
-              duration: 250
+              duration: 2500
             }
           }}>
             <Box
@@ -848,8 +893,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   image2: {
     flex: 1,

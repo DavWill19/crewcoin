@@ -2,7 +2,7 @@
   "expo": {
     "name": "Crew Coin",
     "slug": "crew-coin",
-    "version": "6.0.0",
+    "version": "8.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
@@ -11,6 +11,10 @@
       "image": "./assets/images/splash.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
+    },
+    "notification": {
+      "icon": "./assets/images/adaptive-iconsmall.png",
+      "color": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -30,7 +34,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 6,
+      "versionCode": 8,
       "package": "com.davwill19.crewcoin"
     },
     "web": {
@@ -42,7 +46,7 @@
         {
           "icon": "./assets/images/adaptive-iconsmall.png",
           "color": "#ffffff",
-          "sounds": ["./assets/chaching.wav"],
+          "sounds": "./assets/chaching.wav",
           "mode": "production"
         }
       ]

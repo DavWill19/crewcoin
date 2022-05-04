@@ -16,29 +16,54 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView } from "react-native";
-import { Component, useContext } from "react";
+import { Component, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
+
+
+
 
 
 
 export function Login() {
     const navigation = useNavigation();
     const { value, setValue } = useContext(UserContext);
-    const [formData, setData] = React.useState({});
+    const [formData, setData] = React.useState({ ...formData, username: username });
+    const [username, setUsername] = React.useState("");
     const [user, setUser] = React.useState({});
     const [isLoading, setIsLoading] = React.useState(false);
+
+    async function getValueFor(key) {
+        let result = await SecureStore.getItemAsync(key);
+        if (result) {
+            setUsername(result);
+        } else {
+            setUsername("");
+        }
+    }
+    getValueFor("username");
+
+
+    useEffect(() => {
+        if (username.length > 0) {
+            setData({ ...formData, username: username });
+        }
+    }, [username]);
+
+
+
+
     function Spinner() {
         if (isLoading) {
             return (
                 <Image source={require('../assets/images/genericspinner.gif')}
-                    style={{ marginTop: "-69%", width: '36%', height: '40%', zIndex:2, justifyContent: "center", alignItems: "center", top: "57%", right: "-33%", resizeMode: "contain" }} />
+                    style={{ marginTop: "-69%", width: '36%', height: '40%', zIndex: 2, justifyContent: "center", alignItems: "center", top: "57%", right: "-33%", resizeMode: "contain" }} />
             )
         }
     }
 
     return (
         <View width="80%" backgroundColor="#fff">
-        {Spinner()}
+            {Spinner()}
             <Box mx="auto" safeArea p="2" py="4" w="100%" maxW="340" >
                 <Image style={styles.title} source={require('../assets/images/crewcoinlogo.png')} />
                 <Heading
@@ -56,7 +81,7 @@ export function Login() {
                 <VStack space={3} mt="5">
                     <FormControl>
                         <FormControl.Label>Email ID</FormControl.Label>
-                        <Input onChangeText={(value) => setData({ ...formData, username: value.toLowerCase() })} />
+                        <Input defaultValue={username}  type="email" onChangeText={(value) => setData({ ...formData, username: value.toLowerCase() })} />
                     </FormControl>
                     <FormControl>
                         <FormControl.Label>Password</FormControl.Label>
@@ -67,7 +92,7 @@ export function Login() {
                                 fontWeight: "medium",
                                 fontSize: "sm",
                             }}
-                            href="https://www.crew-coin.com/forgotpassword"
+                            href="https://www.crew-coin.com/#/forgotpassword"
                         >
                             Forgot Password?
                         </Link>
@@ -120,7 +145,7 @@ export function Login() {
                                 fontWeight: "medium",
                                 fontSize: "sm",
                             }}
-                            href="https://www.crew-coin.com"
+                            href="https://www.crew-coin.com/#/signup"
                         >
                             Setup New Organization
                         </Link>
@@ -133,8 +158,8 @@ export function Login() {
 
 async function save(key, value) {
     await SecureStore.setItemAsync(key, value);
-  }
-  
+}
+
 
 function handleSubmit(formData, navigation, setUser, setValue, setData, isLoading, setIsLoading) {
     setIsLoading(true);
@@ -161,6 +186,7 @@ function handleSubmit(formData, navigation, setUser, setValue, setData, isLoadin
                 setValue(res.user);
                 //store json web token in secure storage
                 save("token", res.token);
+                save("username", res.user.username);
                 navigation.navigate('Root');
             } else {
                 Alert.alert(
@@ -194,13 +220,13 @@ function handleSubmit(formData, navigation, setUser, setValue, setData, isLoadin
 }
 
 export default function LoginScreen() {
-    
+
     return (
         <>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
-                
+
             >
                 <NativeBaseProvider>
                     <ScrollView backgroundColor="#fff" >
