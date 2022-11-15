@@ -1,4 +1,4 @@
-import { StyleSheet, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
+import { StyleSheet, View, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
 import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button } from 'native-base';
 import { ScrollView } from "react-native-gesture-handler";
 import prizes from './sample';
@@ -39,7 +39,7 @@ export default function TabThreeScreen() {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(100).then(() => setRefreshing(false),
-      fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
+      fetch(`https://crewcoinserver.vercel.app/store/${value.portalId}`, {
         method: "GET",
         headers: {
           authorization: `bearer ${token}`,
@@ -75,7 +75,7 @@ export default function TabThreeScreen() {
 
     )
     if (value.newStoreItem) {
-      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
+      fetch(`https://crewcoinserver.vercel.app/crewuser/alert/${value._id}`, {
         method: "PUT",
         headers: {
           //bearer token
@@ -117,7 +117,7 @@ export default function TabThreeScreen() {
           navigation.navigate("Login");
         });
     }
-    
+
   })
 
 
@@ -171,7 +171,7 @@ export default function TabThreeScreen() {
       })
 
     //fetch user data
-    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
       method: "GET",
       headers: {
         authorization: `bearer ${token}`,
@@ -220,7 +220,7 @@ export default function TabThreeScreen() {
 
     // update alerts
     if (value.newStoreItem) {
-      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
+      fetch(`https://crewcoinserver.vercel.app/crewuser/alert/${value._id}`, {
         method: "PUT",
         headers: {
           //bearer token
@@ -313,7 +313,7 @@ export default function TabThreeScreen() {
         setTimeout(() => {
           getDownloadURL(ref(storage, `${imageName}`))
             .then((url) => {
-              fetch(`https://crewcoin.herokuapp.com/store`, {
+              fetch(`https://crewcoinserver.vercel.app/store`, {
                 method: "POST",
                 headers: {
                   authorization: `bearer ${token}`,
@@ -424,8 +424,17 @@ export default function TabThreeScreen() {
       function TempImage() {
         if (imageUrl) {
           return (
-            <Image alt="temp" shadow={9} style={{ width: 300, height: 300, borderRadius: 5 }}
-              source={{ uri: imageUrl }} resizeMode="contain" />
+            <View>
+            <TouchableOpacity style={{ zIndex: 999, marginTop: 6, marginBottom: -31, }}
+            onPress={() => { setPost({...postData, imageUrl: "", image: "" }) }}
+            >
+            <Text shadow={9}  style={{color: "white", fontSize: 24, marginLeft: 270, zIndex: 999, border: 1, borderRadius: "10%" }}>
+            <Ionicons name="md-close-circle" size={20} color="white"/>
+            </Text>
+            </TouchableOpacity>
+              <Image alt="temp" shadow={9} style={{ width: 300, height: 300, borderRadius: 5 }}
+                source={{ uri: imageUrl }} resizeMode="contain" />
+            </View>
           )
         } else {
           return null;
@@ -502,7 +511,7 @@ export default function TabThreeScreen() {
     const { value, setValue } = useContext(UserContext);
     const [prizesData, setPrizes] = useState([]);
     useEffect(() => {
-      fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
+      fetch(`https://crewcoinserver.vercel.app/store/${value.portalId}`, {
         method: "GET",
         headers: {
           authorization: `bearer ${token}`,
@@ -602,7 +611,7 @@ export default function TabThreeScreen() {
         if (value.balance >= prize.cost) {
           setIsLoading(true);
 
-          fetch(`https://crewcoin.herokuapp.com/crewuser/${value._id}`, {
+          fetch(`https://crewcoinserver.vercel.app/crewuser/${value._id}`, {
             method: "PUT",
             headers: {
               authorization: `bearer ${token}`,
@@ -730,7 +739,8 @@ export default function TabThreeScreen() {
       }).catch((error) => {
         // Uh-oh, an error occurred!
       });
-      fetch(`https://crewcoin.herokuapp.com/store/${prize._id}`, {
+
+      fetch(`https://crewcoinserver.vercel.app/store/${prize._id}`, {
         method: "DELETE",
         headers: {
           authorization: `bearer ${token}`,

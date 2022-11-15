@@ -1,4 +1,4 @@
-import { StyleSheet, ImageBackground, Image, View, Alert, TouchableOpacity } from "react-native";
+import { StyleSheet, ImageBackground, Image, View, Alert, TouchableOpacity, KeyboardAvoidingView } from "react-native";
 import { NativeBaseProvider, Box, Container, Heading, Divider, AspectRatio, Stack, HStack, Text, Icon, VStack, Center, StatusBar, Button, Input } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, ScrollView } from "react-native-gesture-handler";
@@ -85,7 +85,7 @@ export default function SendScreen() {
             }
         }
         function deleteUser(id) {
-            fetch(`https://crewcoin.herokuapp.com/crewuser/${id}`, {
+            fetch(`https://crewcoinserver.vercel.app/crewuser/${id}`, {
                 method: "DELETE",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -129,7 +129,7 @@ export default function SendScreen() {
                     );
                 }
                 )
-            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -166,7 +166,7 @@ export default function SendScreen() {
 
         // function to set new user balance
         function reload() {
-            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -205,7 +205,7 @@ export default function SendScreen() {
         useEffect(() => {
             //get user data
             setIsLoading(true);
-            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -300,7 +300,7 @@ export default function SendScreen() {
                         if (value.balance >= coinincrease) {
                             if (coinincrease > 0) {
 
-                                fetch(`https://crewcoin.herokuapp.com/crewuser/send/${userId}`, {
+                                fetch(`https://crewcoinserver.vercel.app/crewuser/send/${userId}`, {
                                     method: "PUT",
                                     headers: {
                                         //bearer token
@@ -412,6 +412,7 @@ export default function SendScreen() {
                 }
 
                 return (
+
                     <Box
                         key={user._id}
                         style={{ width: 500, marginLeft: 0 }}
@@ -469,7 +470,6 @@ export default function SendScreen() {
                             }} />
                         </Stack>
                     </Box>
-
                 )
             })
         )
@@ -478,14 +478,22 @@ export default function SendScreen() {
     return (
         <NativeBaseProvider>
             <AppBar />
-            <ImageBackground imageStyle=
-                {{ opacity: 0.2 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
-                {Spinner()}
-                <ScrollView>
-                    {CoinShow(prizes)}
-                    {admin()}
-                </ScrollView>
-            </ImageBackground>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+                enabled={true}
+
+            >
+                <ImageBackground imageStyle=
+                    {{ opacity: 0.2 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+                    {Spinner()}
+                    <ScrollView>
+                        {CoinShow(prizes)}
+                        {admin()}
+
+                    </ScrollView>
+                </ImageBackground>
+                </KeyboardAvoidingView>
             <CardBalance />
         </NativeBaseProvider>
     );

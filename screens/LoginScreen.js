@@ -18,6 +18,7 @@ import * as SecureStore from 'expo-secure-store';
 import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView } from "react-native";
 import { Component, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
+import { getNextTriggerDateAsync } from "expo-notifications";
 
 
 
@@ -81,7 +82,7 @@ export function Login() {
                 <VStack space={3} mt="5">
                     <FormControl>
                         <FormControl.Label>Email ID</FormControl.Label>
-                        <Input defaultValue={username}  type="email" onChangeText={(value) => setData({ ...formData, username: value.toLowerCase() })} />
+                        <Input defaultValue={username} type="email" onChangeText={(value) => setData({ ...formData, username: value.toLowerCase() })} />
                     </FormControl>
                     <FormControl>
                         <FormControl.Label>Password</FormControl.Label>
@@ -163,7 +164,7 @@ async function save(key, value) {
 
 function handleSubmit(formData, navigation, setUser, setValue, setData, isLoading, setIsLoading) {
     setIsLoading(true);
-    fetch("https://crewcoin.herokuapp.com/crewuser/login", {
+    fetch("https://crewcoinserver.vercel.app/crewuser/login", {
         method: "POST",
         headers: {
             authorization: "jwt",
@@ -180,43 +181,48 @@ function handleSubmit(formData, navigation, setUser, setValue, setData, isLoadin
 
         .then(res => res.json())
         .then(res => {
-            if (res.success) {
-                setIsLoading(false);
-                setUser(res.user);
-                setValue(res.user);
-                //store json web token in secure storage
-                save("token", res.token);
-                save("username", res.user.username);
-                navigation.navigate('Root');
-            } else {
+            if (res) {
+                console.log(res.session, "session")
+                if (res.success === true) {
+                    setIsLoading(false);
+                    setUser(res.user);
+                    setValue(res.user);
+                    //store json web token in secure storage
+                    save("token", res.token);
+                    save("username", res.user.username);
+                    setIsLoading(false);
+                    navigation.navigate('Root');
+                }
+            }
+        }
+        )
+        .catch(err => {
+            console.log(err.toString())
+            if (err.toString() == `SyntaxError: JSON Parse error: Unexpected identifier "Unauthorized"`) {
                 Alert.alert(
-                    "Alert Title",
-                    "My Alert Msg",
+                    "Invalid Username or Password",
+                    "",
                     [
-                        {
-                            text: "Cancel",
-                            onPress: () => console.log("Cancel Pressed"),
-                            style: "cancel"
-                        },
+
                         { text: "OK", onPress: () => console.log("OK Pressed") }
                     ]
-                );
-
+                )
+                setIsLoading(false);
             }
-        })
-        .catch(err => {
-            console.log(err);
-            Alert.alert(
-                "Invalid Username or Password",
-                "Please enter valid credentials",
-                [
+            else {
+                Alert.alert(
+                    "Error",
+                    "Something went wrong. Check internet connection",
+                    [
 
-                    { text: "OK", onPress: () => console.log("OK Pressed") }
-                ]
-            )
-            setIsLoading(false);
+                        { text: "OK", onPress: () => console.log("OK Pressed") }
+                    ]
+                )
+                setIsLoading(false);
+            }
         }
-        );
+        )
+
 }
 
 export default function LoginScreen() {

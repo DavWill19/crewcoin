@@ -242,7 +242,7 @@ export const Signup = () => {
 
 function handleSubmit(formData, navigation, setUser, setValue, setIsLoading) {
     setIsLoading(true)
-    fetch("https://crewcoin.herokuapp.com/crewuser/signup", {
+    fetch("https://crewcoinserver.vercel.app/crewuser/signup", {
         method: "POST",
         headers: {
             authorization: "jwt",

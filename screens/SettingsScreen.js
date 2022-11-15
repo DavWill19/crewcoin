@@ -103,7 +103,7 @@ export const Example = (value) => {
 
     }
     function passwordChange(password) {
-        fetch(`https://crewcoin.herokuapp.com/crewuser/passchange/${value.username}`, {
+        fetch(`https://crewcoinserver.vercel.app/crewuser/passchange/${value.username}`, {
             method: "PUT",
             headers: {
                 authorization: `Bearer ${token}`,
@@ -217,7 +217,7 @@ export const Example = (value) => {
                             Email:
                         </Heading>
                         <Heading size="sm" >
-                            {value.username}
+                            {value.username.substring(0, 25) + "..."}
                         </Heading>
                     </HStack>
                     <Divider />

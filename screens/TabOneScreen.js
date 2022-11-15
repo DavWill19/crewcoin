@@ -37,7 +37,7 @@ export default function TabOneScreen({ route, navigation }) {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(2000).then(() => setRefreshing(false),
-    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
       method: "GET",
       headers: {
         authorization: "jwt",
@@ -55,7 +55,6 @@ export default function TabOneScreen({ route, navigation }) {
           let admin = res.filter(user => user.admin === true);
           setValue({ ...value, balance: self[0].balance, adminEmail: admin[0].username, organization: admin[0].organization });
           setOrganization(admin[0].organization);
-          console.log("fetched");
         } else {
           Alert.alert(
             "Error",
@@ -89,9 +88,8 @@ export default function TabOneScreen({ route, navigation }) {
             return;
           }
           const pushtoken = (await Notifications.getExpoPushTokenAsync()).data;
-          console.log(pushtoken);
           if (pushtoken) {
-            fetch(`https://crewcoin.herokuapp.com/crewuser/adminpush/${value._id}`, {
+            fetch(`https://crewcoinserver.vercel.app/crewuser/adminpush/${value._id}`, {
               method: "PUT",
               headers: {
                 //bearer token
@@ -172,7 +170,7 @@ export default function TabOneScreen({ route, navigation }) {
         return null
       })
 
-    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
       method: "GET",
       headers: {
         authorization: "jwt",
@@ -226,7 +224,6 @@ export default function TabOneScreen({ route, navigation }) {
     const adminBalance = adminUsers.reduce((accumulator, object) => {
       return accumulator + object.balance;
     }, 0);
-    console.log("users", users);
     let userTotal = users.reduce((accumulator, current) => accumulator + current.balance, 0)
     let circulationTotal = userTotal - adminBalance;
     if (value.admin && circulationTotal > -1) {
