@@ -85,7 +85,7 @@ export default function SendScreen() {
             }
         }
         function deleteUser(id) {
-            fetch(`https://crewcoinserver.vercel.app/crewuser/${id}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/${id}`, {
                 method: "DELETE",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -129,7 +129,7 @@ export default function SendScreen() {
                     );
                 }
                 )
-            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -160,13 +160,12 @@ export default function SendScreen() {
                     console.log(err);
                 }
                 );
-            let user = userData.filter(el => el.username !== value.username);
         }
 
 
         // function to set new user balance
         function reload() {
-            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -205,7 +204,7 @@ export default function SendScreen() {
         useEffect(() => {
             //get user data
             setIsLoading(true);
-            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: `bearer ${token}`,
@@ -300,7 +299,7 @@ export default function SendScreen() {
                         if (value.balance >= coinincrease) {
                             if (coinincrease > 0) {
 
-                                fetch(`https://crewcoinserver.vercel.app/crewuser/send/${userId}`, {
+                                fetch(`https://crewcoin.herokuapp.com/crewuser/send/${userId}`, {
                                     method: "PUT",
                                     headers: {
                                         //bearer token
@@ -454,6 +453,7 @@ export default function SendScreen() {
                                         }} />
 
                                         <Button ml="3"
+                                            backgroundColor="cyan.600"
                                             onPress={() => {
                                                 (handleReceive(navigation, user, formData, self, userId));
 
@@ -493,7 +493,7 @@ export default function SendScreen() {
 
                     </ScrollView>
                 </ImageBackground>
-                </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
             <CardBalance />
         </NativeBaseProvider>
     );

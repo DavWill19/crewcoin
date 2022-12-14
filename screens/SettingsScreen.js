@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView } from "react-native";
+import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView, TouchableOpacity } from "react-native";
 import { NativeBaseProvider, View, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import posts from './sample2';
@@ -10,18 +10,16 @@ import moment from "moment";
 import { toggleClass } from "dom-helpers";
 import * as SecureStore from 'expo-secure-store';
 
-
 export default function SettingsScreen() {
     const { value, setValue } = useContext(UserContext);
     const { navigation } = useNavigation();
 
     return (
         <NativeBaseProvider>
+            <AppBar />
             <ScrollView>
-                <AppBar />
                 <ImageBackground imageStyle=
                     {{ opacity: 0.7 }} style={styles.image2} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
-                    <Divider />
                     <Center>
                         <KeyboardAvoidingView behavior="position" >
                             {Example(value)}
@@ -53,7 +51,7 @@ function AppBar() {
     )
 }
 
-export const Example = (value) => {
+function Example(value) {
     const navigation = useNavigation();
     const [formData, setData] = useState({});
     const [show, setShow] = useState(false);
@@ -69,7 +67,81 @@ export const Example = (value) => {
     }
     getValueFor('token');
 
+    function askDeleteUser(user) {
+        if (user.admin) {
+            Alert.alert(
+                'Delete User',
+                `Are you sure you want to delete your account? This action cannot be undone and may suspend all user accounts!`,
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'OK', onPress: () => {
+                            deleteUser(user._id);
+                        }
+                    },
+                ],
+                { cancelable: false },
+            );
 
+        } else {
+            Alert.alert(
+                'Delete User',
+                `Are you sure you want to delete your account? This action cannot be undone! You will lose any crew coin balance you may have.`,
+
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'OK', onPress: () => {
+                            deleteUser(user._id);
+                        }
+                    },
+                ],
+                { cancelable: false },
+            );
+        }
+    }
+    function deleteUser(id) {
+        fetch(`https://crewcoin.herokuapp.com/crewuser/${id}`, {
+            method: "DELETE",
+            headers: {
+                authorization: `bearer ${token}`,
+                credentials: "same-origin",
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                mode: "cors"
+            }
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    console.log(res);
+                    navigation.navigate('Login');
+                }
+            })
+            .catch(err => {
+                Alert.alert(
+                    'Error',
+                    'Something went wrong!',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => console.log('OK Pressed'),
+                            style: 'cancel',
+                        },
+                    ],
+                    { cancelable: false },
+                );
+            }
+            );
+    }
 
     function passwordForm(show) {
         if (show)
@@ -80,8 +152,8 @@ export const Example = (value) => {
                     <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, newPassword: value })} />
                     <Text>Confirm Password</Text>
                     <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, confirmPassword: value })} />
-
-                    <Button m="3" onPress={() => {
+                    <TouchableOpacity>
+                    <Button m="3" backgroundColor="cyan.600" onPress={() => {
                         if (formData.newPassword && formData.confirmPassword) {
                             if (formData.newPassword === formData.confirmPassword && formData.newPassword.length > 7 && /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(formData.newPassword)) {
                                 passwordChange(formData.newPassword);
@@ -97,13 +169,14 @@ export const Example = (value) => {
                         }
                     }}
                     >Submit</Button>
+                    </TouchableOpacity>
                     <Divider />
                 </>
             )
-
     }
+
     function passwordChange(password) {
-        fetch(`https://crewcoinserver.vercel.app/crewuser/passchange/${value.username}`, {
+        fetch(`https://crewcoin.herokuapp.com/crewuser/passchange/${value.username}`, {
             method: "PUT",
             headers: {
                 authorization: `Bearer ${token}`,
@@ -152,22 +225,23 @@ export const Example = (value) => {
             }
             );
     }
+
     function toggleShow() {
         setShow(!show);
     }
+
     function superUser(user, balance) {
         if (user.superUser) {
-          return (
+            return (
 
-            <Ionicons name="infinite" color="#ffcc00" mt={3} size={22}  />
+                <Ionicons name="infinite" color="#ffcc00" mt={3} size={22} />
 
-            
-          )
+
+            )
         } else {
-          return balance
+            return balance
         }
-      }
-
+    }
     return (
         <>
             <Box
@@ -177,7 +251,6 @@ export const Example = (value) => {
                 my="1"
                 pt="3"
                 pb="3"
-
                 style={styles.image2}
                 maxW="100%"
                 rounded="lg"
@@ -267,14 +340,20 @@ export const Example = (value) => {
                     </HStack>
                     <Divider />
                 </Stack>
-                <Center mt="5%">
-                    <Button shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { toggleShow(show, setShow) }}><Heading>Change Password</Heading></Button>
+                <Center>
+                <TouchableOpacity>
+                    <Button shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { navigation.navigate('Login') }}><Heading>Log Out</Heading></Button>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                    <Button shadow={2}  mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { toggleShow(show, setShow) }}><Heading>Change My Password</Heading></Button>
+                    </TouchableOpacity>
                     {passwordForm(show)}
-                    <Button shadow={2} mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { navigation.navigate('Login') }}><Heading>Log Out</Heading></Button>
+                    <TouchableOpacity>
+                    <Button shadow={2} mt="4" mb="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="muted.300" onPress={() => { askDeleteUser(value) }}><Heading>Delete My Account</Heading></Button>
+                    </TouchableOpacity>
                 </Center>
             </Box>
         </>
-
     )
 }
 

@@ -242,7 +242,7 @@ export const Signup = () => {
 
 function handleSubmit(formData, navigation, setUser, setValue, setIsLoading) {
     setIsLoading(true)
-    fetch("https://crewcoinserver.vercel.app/crewuser/signup", {
+    fetch("https://crewcoin.herokuapp.com/crewuser/signup", {
         method: "POST",
         headers: {
             authorization: "jwt",
@@ -271,7 +271,7 @@ function handleSubmit(formData, navigation, setUser, setValue, setIsLoading) {
             } else {
                 Alert.alert(
                     "Error",
-                    `${res.message}`,
+                    `${res.err.message}`,
                     [
                         {
                             text: "Cancel",

@@ -55,7 +55,7 @@ export default function HistoryScreen({ route, navigation }) {
         }
 
         useEffect(() => {
-            fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
                 method: "GET",
                 headers: {
                     authorization: "jwt",
@@ -90,7 +90,7 @@ export default function HistoryScreen({ route, navigation }) {
 
             // update alerts
             if (value.newTransaction) {
-                fetch(`https://crewcoinserver.vercel.app/crewuser/alert/${value._id}`, {
+                fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
                     method: "PUT",
                     headers: {
                         //bearer token

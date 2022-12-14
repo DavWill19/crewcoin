@@ -1,5 +1,5 @@
 import { StyleSheet, View, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
-import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button } from 'native-base';
+import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button, Modal, FormControl } from 'native-base';
 import { ScrollView } from "react-native-gesture-handler";
 import prizes from './sample';
 import { useContext, useEffect, useMemo, useCallback, useState } from "react";
@@ -22,7 +22,7 @@ initializeApp(firebaseConfig);
 
 export default function TabThreeScreen() {
   const { value, setValue } = useContext(UserContext);
-  const [prizesData, setPrizes] = useState([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUser] = useState([]);
   const [adminPushToken, setAdmin] = useState([]);
@@ -30,16 +30,76 @@ export default function TabThreeScreen() {
   const navigation = useNavigation();
   const [balanceData, setBalance] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [postData, setPost] = useState({});
+  const [prizeData, setPrize] = useState({});
+  const [kbOffset, setKbOffset] = useState(0);
 
   const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
   }
 
+  function postImageThumb(prizes) {
+    if (prizes.image) {
+      return (
+        <Image
+          borderColor="gray.200"
+          shadow={9}
+          width={300}
+          alt={prizes.createdAt}
+          source={{ uri: prizes.image }}
+          style={{ width: 200, height: 200, borderRadius: 5, resizeMode: 'contain' }}
+        />
+      )
+    } else {
+      return null;
+    }
+  }
+  function updatePrize(prizeData) {
 
+
+
+    fetch(`https://crewcoin.herokuapp.com/store/${prizeData._id}`, {
+      method: "Put",
+      headers: {
+        authorization: `bearer ${token}`,
+        credentials: "same-origin",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        mode: "cors"
+      },
+      body: JSON.stringify({
+        "title": prizeData.title,
+        "description": prizeData.description,
+        "cost": prizeData.cost,
+      }),
+    })
+
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          setPrizes(res.prizes);
+        } else {
+          console.log("Something went wrong")
+          Alert.alert(
+            "Something went wrong",
+            `Error`,
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          );
+        }
+      })
+      .catch(err => {
+        console.log(err)
+      }
+      );
+
+  }
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(100).then(() => setRefreshing(false),
-      fetch(`https://crewcoinserver.vercel.app/store/${value.portalId}`, {
+      fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
         headers: {
           authorization: `bearer ${token}`,
@@ -75,7 +135,7 @@ export default function TabThreeScreen() {
 
     )
     if (value.newStoreItem) {
-      fetch(`https://crewcoinserver.vercel.app/crewuser/alert/${value._id}`, {
+      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
         method: "PUT",
         headers: {
           //bearer token
@@ -171,7 +231,7 @@ export default function TabThreeScreen() {
       })
 
     //fetch user data
-    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
+    fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
       method: "GET",
       headers: {
         authorization: `bearer ${token}`,
@@ -220,7 +280,7 @@ export default function TabThreeScreen() {
 
     // update alerts
     if (value.newStoreItem) {
-      fetch(`https://crewcoinserver.vercel.app/crewuser/alert/${value._id}`, {
+      fetch(`https://crewcoin.herokuapp.com/crewuser/alert/${value._id}`, {
         method: "PUT",
         headers: {
           //bearer token
@@ -278,7 +338,6 @@ export default function TabThreeScreen() {
   }
 
   function Example() {
-    const [postData, setPost] = useState({});
     const imageUrl = postData.imageUrl;
 
     function handlePost(setPrizes) {
@@ -313,7 +372,7 @@ export default function TabThreeScreen() {
         setTimeout(() => {
           getDownloadURL(ref(storage, `${imageName}`))
             .then((url) => {
-              fetch(`https://crewcoinserver.vercel.app/store`, {
+              fetch(`https://crewcoin.herokuapp.com/store`, {
                 method: "POST",
                 headers: {
                   authorization: `bearer ${token}`,
@@ -425,13 +484,13 @@ export default function TabThreeScreen() {
         if (imageUrl) {
           return (
             <View>
-            <TouchableOpacity style={{ zIndex: 999, marginTop: 6, marginBottom: -31, }}
-            onPress={() => { setPost({...postData, imageUrl: "", image: "" }) }}
-            >
-            <Text shadow={9}  style={{color: "white", fontSize: 24, marginLeft: 270, zIndex: 999, border: 1, borderRadius: "10%" }}>
-            <Ionicons name="md-close-circle" size={20} color="white"/>
-            </Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={{ zIndex: 999, marginTop: 6, marginBottom: -31, }}
+                onPress={() => { setPost({ ...postData, imageUrl: "", image: "" }) }}
+              >
+                <Text shadow={9} style={{ color: "white", fontSize: 24, marginLeft: 270, zIndex: 999, border: 1, borderRadius: "10%" }}>
+                  <Ionicons name="md-close-circle" size={20} color="white" />
+                </Text>
+              </TouchableOpacity>
               <Image alt="temp" shadow={9} style={{ width: 300, height: 300, borderRadius: 5 }}
                 source={{ uri: imageUrl }} resizeMode="contain" />
             </View>
@@ -494,9 +553,11 @@ export default function TabThreeScreen() {
                 </Center>
                 <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
                 <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
-                <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value })} placeholder="Price" />
+                <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value.replace(/[^0-9]/g, '') })} placeholder="Price" />
 
-                <Button shadow={3} onPress={() => { handlePost(setPrizes) }}> Post New Item</Button>
+                <Button backgroundColor="cyan.500" shadow={3} onPress={() => { handlePost(setPrizes) }}>
+                  Post New Item
+                </Button>
               </Stack>
             </Box>
           </PresenceTransition>
@@ -511,7 +572,7 @@ export default function TabThreeScreen() {
     const { value, setValue } = useContext(UserContext);
     const [prizesData, setPrizes] = useState([]);
     useEffect(() => {
-      fetch(`https://crewcoinserver.vercel.app/store/${value.portalId}`, {
+      fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
         headers: {
           authorization: `bearer ${token}`,
@@ -577,10 +638,27 @@ export default function TabThreeScreen() {
       }
     }
 
+
+    function editIcon(prize, setShowModal, setPrize) {
+      if (value.admin) {
+        return (
+          <View>
+            <Button onPress={() => { setPrize(prize); setShowModal(true) }} backgroundColor="cyan.500" mb="2">
+              <Ionicons name="md-create-outline" size={15} color="white" >
+                <Text color="white"> Edit Item</Text>
+              </Ionicons>
+            </Button>
+          </View>
+        )
+      } else {
+        return null;
+      }
+    }
+
     function deleteButton(prize) {
       if (value.admin) {
         return (
-          <Button colorScheme="rose" mb="2" onPress={() => {
+          <Button colorScheme="rose" mb="2" width="90%" onPress={() => {
             Alert.alert(
               "Remove Prize",
               "Are you sure you want to remove this prize?",
@@ -598,7 +676,11 @@ export default function TabThreeScreen() {
               ],
               { cancelable: false }
             );
-          }}>Remove Item</Button>
+          }}>
+            <Ionicons name="ios-remove-circle-outline" size={15} color="white" >
+              <Text color="white"> Remove Item</Text>
+            </Ionicons>
+          </Button>
         )
       } else {
         return null;
@@ -611,7 +693,7 @@ export default function TabThreeScreen() {
         if (value.balance >= prize.cost) {
           setIsLoading(true);
 
-          fetch(`https://crewcoinserver.vercel.app/crewuser/${value._id}`, {
+          fetch(`https://crewcoin.herokuapp.com/crewuser/${value._id}`, {
             method: "PUT",
             headers: {
               authorization: `bearer ${token}`,
@@ -740,7 +822,7 @@ export default function TabThreeScreen() {
         // Uh-oh, an error occurred!
       });
 
-      fetch(`https://crewcoinserver.vercel.app/store/${prize._id}`, {
+      fetch(`https://crewcoin.herokuapp.com/store/${prize._id}`, {
         method: "DELETE",
         headers: {
           authorization: `bearer ${token}`,
@@ -801,6 +883,7 @@ export default function TabThreeScreen() {
     }
     return (
       prizes.map(prize => {
+        console.log(prize)
         return (
           <PresenceTransition visible initial={{
             opacity: 0
@@ -811,7 +894,7 @@ export default function TabThreeScreen() {
             }
           }}>
             <Box
-              pt="5"
+              pt={5}
               shadow={2}
               style={styles.image5}
               mb="2"
@@ -856,16 +939,16 @@ export default function TabThreeScreen() {
                       _dark={{
                         color: "amber.600",
                       }}
-                      fontWeight="600"
                       fontSize={16}
                     >
                       {coin(prize.cost)}
                     </Text>
                   </HStack>
                   {buyButton(prize)}
-                  {deleteButton(prize)}
+                  {editIcon(prize, setShowModal, setPrize)}
                 </HStack>
               </Stack>
+              {deleteButton(prize)}
             </Box>
           </PresenceTransition>
         )
@@ -887,12 +970,51 @@ export default function TabThreeScreen() {
           <ScrollView
             refreshControl={
               <RefreshControl
-
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-
               />
             }>
+
+            <Modal style={{ marginTop: '-10%' }} isOpen={showModal} onClose={() => setShowModal(false)}>
+              <Modal.Content style={{ marginTop: kbOffset }}>
+                <Modal.CloseButton />
+                <ScrollView>
+                  <Modal.Header bg='muted.100'>{prizeData.title}</Modal.Header>
+                  <Modal.Body>
+                    <Box>
+                      <Center>
+                        {postImageThumb(prizeData)}
+                      </Center>
+                    </Box>
+                    <Box>
+                      <Text>Item Title:</Text>
+                      <Input value={prizeData.title} onChangeText={(value) => setPrize({ ...prizeData, title: value })} />
+                      <Text>Item Description:</Text>
+                      <Input value={prizeData.description} onChangeText={(value) => setPrize({ ...prizeData, description: value })} />
+                      <Text>Item Cost:</Text>
+                      <Input value={`${prizeData.cost}`} onChangeText={(value) => setPrize({ ...prizeData, cost: value.replace(/[^0-9]/g, '') })} />
+                    </Box>
+                    <Modal.Footer>
+                      <Button.Group mt={5} space={2}>
+
+                        <Button variant="outline" colorScheme="blueGray" onPress={() => {
+                          setShowModal(false);
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button onPress={() => {
+                          setShowModal(false);
+                          updatePrize(prizeData);
+                        }}>
+                          Save
+                        </Button>
+                      </Button.Group>
+                    </Modal.Footer>
+                    <Divider />
+                  </Modal.Body>
+                </ScrollView>
+              </Modal.Content>
+            </Modal>
             <Example prizes={prizes} />
             <Prizes prizes={prizes} />
           </ScrollView>

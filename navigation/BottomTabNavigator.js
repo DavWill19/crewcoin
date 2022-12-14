@@ -3,7 +3,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
-import { useColorScheme } from "react-native";
+import { useColorScheme, Dimensions } from "react-native";
 import { useContext } from "react";
 import { UserContext }  from "../screens/UserContext";
 import Colors from "../constants/Colors";
@@ -85,11 +85,20 @@ export default function BottomTabNavigator() {
     </BottomTab.Navigator>
   );
 }
-
+function sizeAdjustFont() {
+  // screen height
+  const screenHeight = Dimensions.get("window").height;
+  if (screenHeight > 900) {
+    return 35;
+  }
+  else  {
+    return 30;
+  }
+}
 // You can explore the built-in icon families and icons on the web at:
 // https://icons.expo.fyi/
 function TabBarIcon(props) {
-  return <Ionicons size={30} style={{ marginBottom: -3 }} {...props} />;
+  return <Ionicons size={sizeAdjustFont()} style={{ marginBottom: -10 }} {...props} />;
 }
 
 // Each tab has its own navigation stack, you can read more about this pattern here:
@@ -99,8 +108,9 @@ function TabBarIcon(props) {
 function TabOneNavigator(props) {
   const TabOneStack = createStackNavigator();
   return (
-    <TabOneStack.Navigator screenOptions={{ headerShown: false }}>
+    <TabOneStack.Navigator  screenOptions={{ headerShown: false }}>
       <TabOneStack.Screen
+
         {...props}
         name="Wallet"
         component={TabOneScreen}
@@ -120,7 +130,10 @@ function TabTwoNavigator(props) {
       <TabTwoStack.Screen
         name="Announcements1"
         component={TabTwoScreen}
-        options={{ headerTitle: "Announcements" }}
+        options={{ 
+          headerTitle: "Announcements",
+          size: 50,
+         }}
       />
     </TabTwoStack.Navigator>
   );

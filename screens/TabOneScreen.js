@@ -1,9 +1,9 @@
-import { StyleSheet, ImageBackground, RefreshControl } from "react-native";
+import { StyleSheet, ImageBackground, RefreshControl, Dimensions } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { NativeBaseProvider, Image, View, Stack, Box, Heading, Divider, Flex, HStack, Text, Center, PresenceTransition, } from 'native-base';
+import { NativeBaseProvider, Image, VStack, View, Stack, Box, Heading, Divider, Flex, HStack, Text, Center, PresenceTransition, } from 'native-base';
 import { useIsFocused } from '@react-navigation/native';
-import { useContext, useEffect, useCallback} from "react";
+import { useContext, useEffect, useCallback } from "react";
 import { useState } from "react";
 import { UserContext } from "./UserContext";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
@@ -27,8 +27,15 @@ export default function TabOneScreen({ route, navigation }) {
   const { value, setValue } = useContext(UserContext);
   const [refreshing, setRefreshing] = useState(false);
   const isFocused = useIsFocused();
- 
 
+  function createMargin() {
+    if (Dimensions.get("window").height > 900) {
+        return 5;
+    }
+    else {
+        return 0;
+    }
+}
 
   const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -37,39 +44,39 @@ export default function TabOneScreen({ route, navigation }) {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(2000).then(() => setRefreshing(false),
-    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
-      method: "GET",
-      headers: {
-        authorization: "jwt",
-        credentials: "same-origin",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-    })
-      .then(res => res.json())
-      .then(res => {
-        if (res) {
-          setUser(res);
-          let self = res.filter(user => user.username === value.username);
-          let admin = res.filter(user => user.admin === true);
-          setValue({ ...value, balance: self[0].balance, adminEmail: admin[0].username, organization: admin[0].organization });
-          setOrganization(admin[0].organization);
-        } else {
-          Alert.alert(
-            "Error",
-            "Please check your internet connection",
-            [
-
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          )
-        }
+      fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+        method: "GET",
+        headers: {
+          authorization: "jwt",
+          credentials: "same-origin",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
       })
-      .catch(err => {
-        console.log(err);
-      }
-      )
+        .then(res => res.json())
+        .then(res => {
+          if (res) {
+            setUser(res);
+            let self = res.filter(user => user.username === value.username);
+            let admin = res.filter(user => user.admin === true);
+            setValue({ ...value, balance: self[0].balance, adminEmail: admin[0].username, organization: admin[0].organization });
+            setOrganization(admin[0].organization);
+          } else {
+            Alert.alert(
+              "Error",
+              "Please check your internet connection",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        }
+        )
     )
   })
 
@@ -89,7 +96,7 @@ export default function TabOneScreen({ route, navigation }) {
           }
           const pushtoken = (await Notifications.getExpoPushTokenAsync()).data;
           if (pushtoken) {
-            fetch(`https://crewcoinserver.vercel.app/crewuser/adminpush/${value._id}`, {
+            fetch(`https://crewcoin.herokuapp.com/crewuser/adminpush/${value._id}`, {
               method: "PUT",
               headers: {
                 //bearer token
@@ -150,61 +157,61 @@ export default function TabOneScreen({ route, navigation }) {
   useEffect(() => {
 
     if (isFocused) {
-    // Permission for iOS
-    Permissions.getAsync(Permissions.NOTIFICATIONS)
-      .then(statusObj => {
-        // Check if we already have permission
-        if (statusObj.status !== "granted") {
-          // If permission is not there, ask for the same
-          return Permissions.askAsync(Permissions.NOTIFICATIONS)
-        }
-        return statusObj
-      })
-      .then(statusObj => {
-        // If permission is still not given throw error
-        if (statusObj.status !== "granted") {
-          throw new Error("Permission not granted")
-        }
-      })
-      .catch(err => {
-        return null
-      })
+      // Permission for iOS
+      Permissions.getAsync(Permissions.NOTIFICATIONS)
+        .then(statusObj => {
+          // Check if we already have permission
+          if (statusObj.status !== "granted") {
+            // If permission is not there, ask for the same
+            return Permissions.askAsync(Permissions.NOTIFICATIONS)
+          }
+          return statusObj
+        })
+        .then(statusObj => {
+          // If permission is still not given throw error
+          if (statusObj.status !== "granted") {
+            throw new Error("Permission not granted")
+          }
+        })
+        .catch(err => {
+          return null
+        })
 
-    fetch(`https://crewcoinserver.vercel.app/crewuser/${value.portalId}`, {
-      method: "GET",
-      headers: {
-        authorization: "jwt",
-        credentials: "same-origin",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-    })
-      .then(res => res.json())
-      .then(res => {
-        if (res) {
-          setUser(res);
-          let self = res.filter(user => user.username === value.username);
-          setValue(self[0]);
-          let admin = res.filter(user => user.admin === true);
-          setValue({ ...value, adminEmail: admin[0].username, organization: admin[0].organization });
-          setOrganization(admin[0].organization);
-        } else {
-          Alert.alert(
-            "Error",
-            "Please check your internet connection",
-            [
-
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          )
-        }
+      fetch(`https://crewcoin.herokuapp.com/crewuser/${value.portalId}`, {
+        method: "GET",
+        headers: {
+          authorization: "jwt",
+          credentials: "same-origin",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
       })
-      .catch(err => {
-        console.log(err);
-      }
-      );
-    checkAdminToken();
+        .then(res => res.json())
+        .then(res => {
+          if (res) {
+            setUser(res);
+            let self = res.filter(user => user.username === value.username);
+            setValue(self[0]);
+            let admin = res.filter(user => user.admin === true);
+            setValue({ ...value, adminEmail: admin[0].username, organization: admin[0].organization });
+            setOrganization(admin[0].organization);
+          } else {
+            Alert.alert(
+              "Error",
+              "Please check your internet connection",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        }
+        );
+      checkAdminToken();
     }
   }, [])
   //show alert for new transaction
@@ -228,7 +235,7 @@ export default function TabOneScreen({ route, navigation }) {
     let circulationTotal = userTotal - adminBalance;
     if (value.admin && circulationTotal > -1) {
       return (
-        <Center>
+        <Center mt={createMargin()}>
           <Text style={{
             position: "relative",
             fontSize: 17,
@@ -272,7 +279,7 @@ export default function TabOneScreen({ route, navigation }) {
             />
           }
         >
-          <Flex h={"100%"} mt={2} flexDirection="column" justifyContent="space-around">
+          <VStack h={"100%"} mt={2} flexDirection="column" justifyContent="space-around">
             <Center>
               <Stack w={"100%"}>
                 <Image alt="topper" style={styles.topper} source={require('../assets/images/crewcoinwhite.png')} resizeMode="contain" />
@@ -288,46 +295,28 @@ export default function TabOneScreen({ route, navigation }) {
                 duration: 450
               }
             }}>
-              <Center >
-
-                <Box shadow={5}
-                  height={240}
-                  width={365}
-                  rounded="xl"
-                  mt="-1"
-                  pb={2}
-                  _dark={{
-                    borderColor: "lightBlue.500",
-                    backgroundColor: "lightBlue.500",
-                  }}
-                  _light={{
-                    backgroundColor: "transparent",
-                  }}
-                >
+              <Center>
+                <View mt={createMargin()} shadow={7}>
+                  <Image
+                    shadow={7}
+                    style={styles.credit}
+                    alt="creditcard1"
+                    source={require('../assets/images/crewcoincredit.png')}
+                  />
                   <Text shadow={7} style={styles.text}>{value.firstname + " " + value.lastname}</Text>
                   <Text shadow={7} style={styles.text2}>{organization}</Text>
                   <Image shadow={7} style={styles.creditlogo} alt="logo" source={require('../assets/images/creditcardlogo.png')} />
-                  <View shadow="7">
-                    <Image
-                      mt={-1}
-                      borderRadius={3}
-                      style={styles.credit}
-                      alt="creditcard"
-                      source={require('../assets/images/crewcoincredit.png')}
-
-                    />
-                  </View>
-                </Box>
+                </View>
               </Center>
             </PresenceTransition>
-            <Center>
+            <Center mt={createMargin()}>
 
               <Stack borderColor="#b2c2d1"
                 borderWidth={1}
                 style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)' }}
                 px={2}
                 py={2}
-                mt={1}
+                mt={4}
 
                 borderRadius={5}
                 shadow={9}
@@ -352,7 +341,7 @@ export default function TabOneScreen({ route, navigation }) {
                     backgroundColor: "lightBlue.500",
                   }}
                 >
-                  <Box >
+                  <Box>
                   </Box>
                   <TouchableOpacity onPress={() => { navigation.navigate('Send') }}>
                     <HStack px="4" space={2} >
@@ -365,7 +354,7 @@ export default function TabOneScreen({ route, navigation }) {
                 </Box>
                 <Box
                   shadow={3}
-                  mt={3}
+                  mt={5}
                   w="310"
                   rounded="lg"
                   borderColor="blueGray.400"
@@ -382,7 +371,7 @@ export default function TabOneScreen({ route, navigation }) {
                     backgroundColor: "lightBlue.500",
                   }}
                 >
-                  <Box >
+                  <Box>
                   </Box>
                   <TouchableOpacity onPress={() => { navigation.navigate('History') }}>
                     <HStack px="4" space={2}>
@@ -428,19 +417,19 @@ export default function TabOneScreen({ route, navigation }) {
             </Center>
             <Center mb={5}>
               <Stack>
-                <Center>
-                  <Heading mt={1} size="lg" color="#282A3A" mt={2}>Balance:</Heading>
+                <Center mt={createMargin()}>
+                  <Heading mt={1} size="lg" color="#282A3A">Balance:</Heading>
                 </Center>
                 <Center>
                   <HStack shadow={3} style={styles.button}>
                     <Image alt="gif" style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
-                    <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 33 }}>{superUser(value, value.balance)}</Text>
+                    <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 39 }}>{superUser(value, value.balance)}</Text>
                   </HStack>
                 </Center>
               </Stack>
             </Center>
             {Circulation(userData)}
-          </Flex>
+          </VStack>
 
 
         </ScrollView>
@@ -489,11 +478,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 40,
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
-    width: "65%",
+    width: "79%",
     paddingRight: 11,
     paddingLeft: 11,
-    paddingTop: 9,
-    paddingBottom: 9,
+    paddingTop: 1,
+    paddingBottom: 1,
     resizeMode: 'contain',
     flexDirection: "row",
     justifyContent: "center",
@@ -513,7 +502,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
+  credit: {
+    height: 230,
+    width: 365,
+    resizeMode: 'contain',
+    borderRadius: 8,
+    position: 'relative',
+    padding: 0,
+    elevation: 5,
+  },
   creditlogo: {
     position: 'absolute',
     zIndex: 1999,
@@ -560,13 +557,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     opacity: 0.9,
     fontFamily: 'System',
-  },
-  credit: {
-    position: 'relative',
-    width: 365,
-    height: 252,
-    resizeMode: 'contain',
-    backgroundColor: 'transparent',
   },
   coin: {
     width: 200,

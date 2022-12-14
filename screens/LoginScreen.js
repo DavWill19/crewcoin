@@ -164,7 +164,7 @@ async function save(key, value) {
 
 function handleSubmit(formData, navigation, setUser, setValue, setData, isLoading, setIsLoading) {
     setIsLoading(true);
-    fetch("https://crewcoinserver.vercel.app/crewuser/login", {
+    fetch("https://crewcoin.herokuapp.com/crewuser/login", {
         method: "POST",
         headers: {
             authorization: "jwt",
