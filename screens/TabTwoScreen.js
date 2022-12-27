@@ -176,17 +176,11 @@ export default function TabTwoScreen() {
     })
       .then(res => res.json())
       .then(res => {
-        console.log('it ran')
         if (res) {
-          if (res.length === userData.length) {
-            console.log(res.length);
-          }
-          else {
-            setUser(res);
-            let self = res.filter(user => user.username === value.username);
-            if (self[0] === !value) {
-              setValue(self[0]);
-            }
+          setUser(res);
+          let self = res.filter(user => user.username === value.username);
+          if (self[0] === !value) {
+            setValue(self[0]);
           }
         } else {
           Alert.alert(
@@ -346,7 +340,7 @@ export default function TabTwoScreen() {
                 // Handle any errors
               })
             setIsLoading(false);
-          }, 3000);
+          }, 4000);
         } else {
           setTimeout(() => {
             setIsLoading(true);
@@ -606,300 +600,300 @@ export default function TabTwoScreen() {
             </Ionicons>
           </Button>
         )
-} else {
-  return null;
-}
+      } else {
+        return null;
+      }
     }
-function views(item) {
-  if (item.views) {
-    return (
-      <Text shadow={2} style={styles.text4}>: {item.views.length} Views</Text>
-    )
-  } else {
-    return (
-      <Text shadow={2} style={styles.text4}>: 0 Views</Text>
-    )
-  }
-}
-function deletePost(posts) {
-
-  const storage = getStorage();
-  var postRef = ref(storage, posts.image);
-  // Delete the file
-  if (posts.image) {
-    deleteObject(postRef).then(() => {
-      // File deleted successfully
-    }).catch((error) => {
-      // Uh-oh, an error occurred!
-    });
-
-    fetch(`https://crewcoin.herokuapp.com/announcements/delete/${posts._id}`, {
-      method: "DELETE",
-      headers: {
-        authorization: "jwt",
-        credentials: "same-origin",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-      body: JSON.stringify({
-        "post": posts._id
-      }),
-    })
-
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          setPosts(postsData => postsData.filter(post => post._id !== res.postId))
-          setValue({ ...value, posts: res.posts })
-          Alert.alert(
-            "Post",
-            `Removed`,
-            [
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          );
-        } else {
-          Alert.alert(
-            "Something went wrong",
-            `Error`,
-            [
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          );
-        }
-      })
-      .catch(err => {
-        Alert.alert(
-          `Error`,
-          "Please check internet connection!",
-          [
-            { text: "OK", onPress: () => console.log("OK Pressed") }
-          ]
+    function views(item) {
+      if (item.views) {
+        return (
+          <Text shadow={2} style={styles.text4}>: {item.views.length} Views</Text>
+        )
+      } else {
+        return (
+          <Text shadow={2} style={styles.text4}>: 0 Views</Text>
         )
       }
-      );
-  } else {
-    fetch(`https://crewcoin.herokuapp.com/announcements/delete/${posts._id}`, {
-      method: "DELETE",
-      headers: {
-        authorization: "jwt",
-        credentials: "same-origin",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-      body: JSON.stringify({
-        "post": posts._id
-      }),
-    })
+    }
+    function deletePost(posts) {
 
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          setPosts(postsData => postsData.filter(post => post._id !== res.postId))
-          setValue({ ...value, posts: res.posts })
-          Alert.alert(
-            "Post",
-            `Removed`,
-            [
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          );
-        } else {
-          Alert.alert(
-            "Something went wrong",
-            `Error`,
-            [
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          );
-        }
-      })
-      .catch(err => {
-        Alert.alert(
-          `Error`,
-          "Please check internet connection!",
-          [
-            { text: "OK", onPress: () => console.log("OK Pressed") }
-          ]
-        )
-      }
-      );
-  }
-}
-function sendViews(item) {
-  if (item.views && !item.views.includes(value)) {
-    fetch(`https://crewcoin.herokuapp.com/announcements/views`, {
-      method: "PUT",
-      headers: {
-        authorization: "jwt",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-      body: JSON.stringify({
-        "prizeId": item._id,
-        "userId": `${value.firstname} ${value.lastname}`,
+      const storage = getStorage();
+      var postRef = ref(storage, posts.image);
+      // Delete the file
+      if (posts.image) {
+        deleteObject(postRef).then(() => {
+          // File deleted successfully
+        }).catch((error) => {
+          // Uh-oh, an error occurred!
+        });
 
-      }),
-    })
+        fetch(`https://crewcoin.herokuapp.com/announcements/delete/${posts._id}`, {
+          method: "DELETE",
+          headers: {
+            authorization: "jwt",
+            credentials: "same-origin",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+          },
+          body: JSON.stringify({
+            "post": posts._id
+          }),
+        })
 
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          console.log("success- updated views")
-        } else {
-          console.log("error")
-        }
-      })
-      .catch(err => {
-        console.log(err)
-      });
-  }
-}
-function showImage(item) {
-  if (item.image) {
-    return (
-      <Image
-        shadow={9}
-        style={{ width: 300, height: 300, borderRadius: 5, resizeMode: 'contain' }}
-        alt="image"
-        source={{ uri: item.image }}
-      />
-    )
-  } else {
-    return null;
-  }
-}
-function showViewers(item) {
-  if (item.views) {
-    // list viewers
-    let viewers = item.views.map((viewer, index) => {
-      return (
-        <Text key={index}>{viewer}</Text>
-      )
-    })
-    console.log(item.views)
-    Alert.alert(
-      "Viewed by:",
-      `${item.views}`,
-    );
-  } else {
-    return (
-      null
-    )
-  }
-}
-return (
-  <>
-    <FlatList
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      data={postsData}
-      renderItem={({ item, index }) =>
-        <PresenceTransition visible initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1,
-          transition: {
-            duration: 2050
-          }
-        }}>
-          <Box
-            pt="5"
-            shadow={2}
-            style={styles.image2}
-            mb="2"
-            maxW="360"
-            rounded="lg"
-            overflow="hidden"
-            borderColor="gray.300"
-            borderWidth="1"
-            _dark={{
-              borderColor: "gray.900",
-              backgroundColor: "gray.900",
-            }}
-            _web={{
-              shadow: 2,
-              borderWidth: 0,
-            }}
-            _light={{
-              backgroundColor: "gray.50",
-            }}
-          >
-            <Box pt="0">
-              {showImage(item)}
-              {sendViews(item)}
-            </Box>
-            <Stack w="330" p="1" space={3}>
-              <Stack>
-                <Center>
-                  <Heading size="lg">
-                    {item.title}
-                  </Heading>
-                </Center>
-              </Stack>
-              <Divider />
-              <Text fontWeight="400" fontSize={17}>
-                {item.description}
-              </Text>
-              <Divider />
-              <HStack alignItems="center" space={2} justifyContent="space-between">
-                <HStack alignItems="center">
-                  <Text
-                    color="yellow.600"
-                    _dark={{
-                      color: "warmGray.200",
-                    }}
-                    fontWeight="400"
-                    bold="true"
-                  >
-                    {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
-                  </Text>
-                </HStack>
-                {deleteButton(item)}
-              </HStack>
-              <Divider />
-            </Stack>
-            <HStack>
-              <Ionicons onPress={() => { showViewers(item) }} name="eye-outline" size={18} color="#BCBCBC" />
-              <Text onPress={() => { showViewers(item) }} mb={2} fontSize={13} color="#BCBCBC" ml="1">{views(item)}</Text>
-            </HStack>
-          </Box>
-        </PresenceTransition>
-      }
-      ListHeaderComponent={() => Post()}
-      keyExtractor={item => item._id}
-    />
-  </>
-)
-
-  }
-
-
-return (
-  <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" enabled p>
-    <NativeBaseProvider>
-      <AppBar />
-      <ImageBackground imageStyle=
-        {{ opacity: 0.7 }} style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
-        <View>
-          <PresenceTransition visible initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1,
-            transition: {
-              duration: 1050
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              setPosts(postsData => postsData.filter(post => post._id !== res.postId))
+              setValue({ ...value, posts: res.posts })
+              Alert.alert(
+                "Post",
+                `Removed`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
+            } else {
+              Alert.alert(
+                "Something went wrong",
+                `Error`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
             }
-          }}>
-            <Posts />
-          </PresenceTransition>
-        </View>
-      </ImageBackground>
-    </NativeBaseProvider>
-  </KeyboardAvoidingView>
-);
+          })
+          .catch(err => {
+            Alert.alert(
+              `Error`,
+              "Please check internet connection!",
+              [
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+          );
+      } else {
+        fetch(`https://crewcoin.herokuapp.com/announcements/delete/${posts._id}`, {
+          method: "DELETE",
+          headers: {
+            authorization: "jwt",
+            credentials: "same-origin",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+          },
+          body: JSON.stringify({
+            "post": posts._id
+          }),
+        })
+
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              setPosts(postsData => postsData.filter(post => post._id !== res.postId))
+              setValue({ ...value, posts: res.posts })
+              Alert.alert(
+                "Post",
+                `Removed`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
+            } else {
+              Alert.alert(
+                "Something went wrong",
+                `Error`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
+            }
+          })
+          .catch(err => {
+            Alert.alert(
+              `Error`,
+              "Please check internet connection!",
+              [
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+          );
+      }
+    }
+    function sendViews(item) {
+      if (item.views && !item.views.includes(value)) {
+        fetch(`https://crewcoin.herokuapp.com/announcements/views`, {
+          method: "PUT",
+          headers: {
+            authorization: "jwt",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+          },
+          body: JSON.stringify({
+            "prizeId": item._id,
+            "userId": `${value.firstname} ${value.lastname}`,
+
+          }),
+        })
+
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              console.log("success- updated views")
+            } else {
+              console.log("error")
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          });
+      }
+    }
+    function showImage(item) {
+      if (item.image) {
+        return (
+          <Image
+            shadow={9}
+            style={{ width: 300, height: 300, borderRadius: 5, resizeMode: 'contain' }}
+            alt="image"
+            source={{ uri: item.image }}
+          />
+        )
+      } else {
+        return null;
+      }
+    }
+    function showViewers(item) {
+      if (item.views) {
+        // list viewers
+        let viewers = item.views.map((viewer, index) => {
+          return (
+            <Text key={index}>{viewer}</Text>
+          )
+        })
+        console.log(item.views)
+        Alert.alert(
+          "Viewed by:",
+          `${item.views}`,
+        );
+      } else {
+        return (
+          null
+        )
+      }
+    }
+    return (
+      <>
+        <FlatList
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          data={postsData}
+          renderItem={({ item, index }) =>
+            <PresenceTransition visible initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1,
+              transition: {
+                duration: 2050
+              }
+            }}>
+              <Box
+                pt="5"
+                shadow={2}
+                style={styles.image2}
+                mb="2"
+                maxW="360"
+                rounded="lg"
+                overflow="hidden"
+                borderColor="gray.300"
+                borderWidth="1"
+                _dark={{
+                  borderColor: "gray.900",
+                  backgroundColor: "gray.900",
+                }}
+                _web={{
+                  shadow: 2,
+                  borderWidth: 0,
+                }}
+                _light={{
+                  backgroundColor: "gray.50",
+                }}
+              >
+                <Box pt="0">
+                  {showImage(item)}
+                  {sendViews(item)}
+                </Box>
+                <Stack w="330" p="1" space={3}>
+                  <Stack>
+                    <Center>
+                      <Heading size="lg">
+                        {item.title}
+                      </Heading>
+                    </Center>
+                  </Stack>
+                  <Divider />
+                  <Text fontWeight="400" fontSize={17}>
+                    {item.description}
+                  </Text>
+                  <Divider />
+                  <HStack alignItems="center" space={2} justifyContent="space-between">
+                    <HStack alignItems="center">
+                      <Text
+                        color="yellow.600"
+                        _dark={{
+                          color: "warmGray.200",
+                        }}
+                        fontWeight="400"
+                        bold="true"
+                      >
+                        {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
+                      </Text>
+                    </HStack>
+                    {deleteButton(item)}
+                  </HStack>
+                  <Divider />
+                </Stack>
+                <HStack>
+                  <Ionicons onPress={() => { showViewers(item) }} name="eye-outline" size={18} color="#BCBCBC" />
+                  <Text onPress={() => { showViewers(item) }} mb={2} fontSize={13} color="#BCBCBC" ml="1">{views(item)}</Text>
+                </HStack>
+              </Box>
+            </PresenceTransition>
+          }
+          ListHeaderComponent={() => Post()}
+          keyExtractor={item => item._id}
+        />
+      </>
+    )
+
+  }
+
+
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" enabled p>
+      <NativeBaseProvider>
+        <AppBar />
+        <ImageBackground imageStyle=
+          {{ opacity: 0.7 }} style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
+          <View>
+            <PresenceTransition visible initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1,
+              transition: {
+                duration: 1050
+              }
+            }}>
+              <Posts />
+            </PresenceTransition>
+          </View>
+        </ImageBackground>
+      </NativeBaseProvider>
+    </KeyboardAvoidingView>
+  );
 
 }
 

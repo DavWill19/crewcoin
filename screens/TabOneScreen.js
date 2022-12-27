@@ -354,7 +354,7 @@ export default function TabOneScreen({ route, navigation }) {
                 </Box>
                 <Box
                   shadow={3}
-                  mt={5}
+                  mt={3}
                   w="310"
                   rounded="lg"
                   borderColor="blueGray.400"

@@ -1,8 +1,8 @@
 import { StyleSheet, View, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
 import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button, Modal, FormControl } from 'native-base';
-import { ScrollView } from "react-native-gesture-handler";
+import { ScrollView, TextInput } from "react-native-gesture-handler";
 import prizes from './sample';
-import { useContext, useEffect, useMemo, useCallback, useState } from "react";
+import { useContext, useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { UserContext } from "./UserContext";
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
@@ -22,18 +22,17 @@ initializeApp(firebaseConfig);
 
 export default function TabThreeScreen() {
   const { value, setValue } = useContext(UserContext);
-
+  const [prizesData, setPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUser] = useState([]);
   const [adminPushToken, setAdmin] = useState([]);
   const [token, setToken] = useState('');
   const navigation = useNavigation();
-  const [balanceData, setBalance] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [postData, setPost] = useState({});
   const [prizeData, setPrize] = useState({});
   const [kbOffset, setKbOffset] = useState(0);
+
 
   const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -55,47 +54,9 @@ export default function TabThreeScreen() {
       return null;
     }
   }
-  function updatePrize(prizeData) {
+  // use callback to prevent infinite loop
 
 
-
-    fetch(`https://crewcoin.herokuapp.com/store/${prizeData._id}`, {
-      method: "Put",
-      headers: {
-        authorization: `bearer ${token}`,
-        credentials: "same-origin",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        mode: "cors"
-      },
-      body: JSON.stringify({
-        "title": prizeData.title,
-        "description": prizeData.description,
-        "cost": prizeData.cost,
-      }),
-    })
-
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          setPrizes(res.prizes);
-        } else {
-          console.log("Something went wrong")
-          Alert.alert(
-            "Something went wrong",
-            `Error`,
-            [
-              { text: "OK", onPress: () => console.log("OK Pressed") }
-            ]
-          );
-        }
-      })
-      .catch(err => {
-        console.log(err)
-      }
-      );
-
-  }
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(100).then(() => setRefreshing(false),
@@ -113,11 +74,7 @@ export default function TabThreeScreen() {
         .then(res => res.json())
         .then(res => {
           if (res.success) {
-            if (res.prizes.length === prizesData.length) {
-              return null;
-            } else {
               setPrizes(res.prizes);
-            }
           } else {
             Alert.alert(
               "Something went wrong",
@@ -251,7 +208,6 @@ export default function TabThreeScreen() {
             const admin = res.filter(user => user.admin === true)
             const adminPush = admin.map(el => el.pushToken)
             setAdmin(adminPush);
-            console.log("adminpush", adminPush);
           }
           setIsLoading(false);
         } else {
@@ -338,6 +294,7 @@ export default function TabThreeScreen() {
   }
 
   function Example() {
+    const [postData, setPost] = useState({});
     const imageUrl = postData.imageUrl;
 
     function handlePost(setPrizes) {
@@ -436,7 +393,7 @@ export default function TabThreeScreen() {
               )
               navigation.navigate("Login");
             })
-        }, 3000);
+        }, 4000);
       }
 
     }
@@ -487,7 +444,7 @@ export default function TabThreeScreen() {
               <TouchableOpacity style={{ zIndex: 999, marginTop: 6, marginBottom: -31, }}
                 onPress={() => { setPost({ ...postData, imageUrl: "", image: "" }) }}
               >
-                <Text shadow={9} style={{ color: "white", fontSize: 24, marginLeft: 270, zIndex: 999, border: 1, borderRadius: "10%" }}>
+                <Text shadow={9} style={{ color: "white", fontSize: 24, marginLeft: 270, zIndex: 999, border: 1 }}>
                   <Ionicons name="md-close-circle" size={20} color="white" />
                 </Text>
               </TouchableOpacity>
@@ -586,7 +543,8 @@ export default function TabThreeScreen() {
         .then(res => res.json())
         .then(res => {
           if (res.success) {
-            if (res.prizes.length === prizesData.length) {
+            console.log(prizesData.length)
+            if (res.prizes.length === prizeData.length) {
               return null;
             } else {
               setPrizes(res.prizes);
@@ -639,21 +597,6 @@ export default function TabThreeScreen() {
     }
 
 
-    function editIcon(prize, setShowModal, setPrize) {
-      if (value.admin) {
-        return (
-          <View>
-            <Button onPress={() => { setPrize(prize); setShowModal(true) }} backgroundColor="cyan.500" mb="2">
-              <Ionicons name="md-create-outline" size={15} color="white" >
-                <Text color="white"> Edit Item</Text>
-              </Ionicons>
-            </Button>
-          </View>
-        )
-      } else {
-        return null;
-      }
-    }
 
     function deleteButton(prize) {
       if (value.admin) {
@@ -883,7 +826,6 @@ export default function TabThreeScreen() {
     }
     return (
       prizes.map(prize => {
-        console.log(prize)
         return (
           <PresenceTransition visible initial={{
             opacity: 0
@@ -956,9 +898,101 @@ export default function TabThreeScreen() {
     )
   }
 
+  function editIcon(prize, setShowModal, setPrize) {
+    if (value.admin) {
+      return (
+        <View>
+          <Button onPress={() => { setPrize(prize); setShowModal(true) }} backgroundColor="cyan.500" mb="2">
+            <Ionicons name="md-create-outline" size={15} color="white" >
+              <Text color="white"> Edit Item</Text>
+            </Ionicons>
+          </Button>
+        </View>
+      )
+    } else {
+      return null;
+    }
+  }
+  function updatePrize(prize) {
+    fetch(`https://crewcoin.herokuapp.com/store/${prize._id}`, {
+      method: "Put",
+      headers: {
+        authorization: `bearer ${token}`,
+        credentials: "same-origin",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        mode: "cors"
+      },
+      body: JSON.stringify({
+        "title": prize.title,
+        "description": prize.description,
+        "cost": prize.cost,
+      }),
+    })
 
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          setPrizes(res.prizes);
+        } else {
+          console.log("Something went wrong")
+          Alert.alert(
+            "Something went wrong",
+            `Error`,
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          );
+        }
+      })
+      .catch(err => {
+        console.log(err)
+      }
+      );
 
+  }
 
+  function myTextInput() {
+    const titleRef = useRef("");
+    const descriptionRef = useRef("");
+    const costRef = useRef("");
+    const idRef = useRef("");
+  
+    titleRef.current = prizeData.title;
+    descriptionRef.current = prizeData.description;
+    costRef.current = prizeData.cost;
+    idRef.current = prizeData._id;
+  
+    return (
+      <>
+      <Box>
+      <Text>Item Title:</Text>
+      <Input defaultValue={prizeData.title} onChangeText={(value => titleRef.current = value)} />
+          <Text>Item Description:</Text>
+      <Input defaultValue={prizeData.description} onChangeText={(value) => descriptionRef.current = value} />
+      <Text>Item Cost:</Text>
+      <Input defaultValue={`${prizeData.cost}`} onChangeText={(value) => costRef.current = value.replace(/[^0-9]/g, '')} />
+    </Box>
+    <Modal.Footer>
+                <Button.Group mt={5} space={2}>
+  
+                  <Button variant="outline" colorScheme="blueGray" onPress={() => {
+                    setShowModal(false);
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button onPress={() => {
+                    updatePrize({title: titleRef.current, description: descriptionRef.current, cost: costRef.current, _id: idRef.current});
+                    setShowModal(false);
+                    console.log(prizeData)
+                  }}>
+                    Save
+                  </Button>
+                </Button.Group>
+              </Modal.Footer>
+              </>
+    )
+  }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" enabled>
@@ -974,47 +1008,49 @@ export default function TabThreeScreen() {
                 onRefresh={onRefresh}
               />
             }>
-
+            {/* {editModal(prizeData)} */}
             <Modal style={{ marginTop: '-10%' }} isOpen={showModal} onClose={() => setShowModal(false)}>
-              <Modal.Content style={{ marginTop: kbOffset }}>
-                <Modal.CloseButton />
-                <ScrollView>
-                  <Modal.Header bg='muted.100'>{prizeData.title}</Modal.Header>
-                  <Modal.Body>
-                    <Box>
-                      <Center>
-                        {postImageThumb(prizeData)}
-                      </Center>
-                    </Box>
-                    <Box>
-                      <Text>Item Title:</Text>
-                      <Input value={prizeData.title} onChangeText={(value) => setPrize({ ...prizeData, title: value })} />
-                      <Text>Item Description:</Text>
-                      <Input value={prizeData.description} onChangeText={(value) => setPrize({ ...prizeData, description: value })} />
-                      <Text>Item Cost:</Text>
-                      <Input value={`${prizeData.cost}`} onChangeText={(value) => setPrize({ ...prizeData, cost: value.replace(/[^0-9]/g, '') })} />
-                    </Box>
-                    <Modal.Footer>
-                      <Button.Group mt={5} space={2}>
+        <Modal.Content style={{ marginTop: kbOffset }}>
+          <Modal.CloseButton />
+          <ScrollView>
+            <Modal.Header bg='muted.100'>{prizeData.title}</Modal.Header>
+            <Modal.Body>
+              <Box>
+                <Center>
+                  {postImageThumb(prizeData)}
+                </Center>
+              </Box>
+              {myTextInput()}
+              {/* <Box>
+                <Text>Item Title:</Text>
+                <Input defaultValue={prizeData.title} onChangeText={(value => setTemp({ ...temp, title: value }))} />
+                <Text>Item Description:</Text>
+                <Input defaultValue={prizeData.description} onChangeText={(value) => setTemp({ ...temp, description: value })} />
+                <Text>Item Cost:</Text>
+                <Input defaultValue={`${prizeData.cost}`} onChangeText={(value) => setTemp({ ...temp, cost: value.replace(/[^0-9]/g, '') })} />
+              </Box> */}
+              {/* <Modal.Footer>
+                <Button.Group mt={5} space={2}>
 
-                        <Button variant="outline" colorScheme="blueGray" onPress={() => {
-                          setShowModal(false);
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button onPress={() => {
-                          setShowModal(false);
-                          updatePrize(prizeData);
-                        }}>
-                          Save
-                        </Button>
-                      </Button.Group>
-                    </Modal.Footer>
-                    <Divider />
-                  </Modal.Body>
-                </ScrollView>
-              </Modal.Content>
-            </Modal>
+                  <Button variant="outline" colorScheme="blueGray" onPress={() => {
+                    setShowModal(false);
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button onPress={() => {
+                    setShowModal(false);
+                    setPrize({ ...prizeData, title: temp.title, description: temp.description, cost: temp.cost })
+                    updatePrize();
+                  }}>
+                    Save
+                  </Button>
+                </Button.Group>
+              </Modal.Footer> */}
+              <Divider />
+            </Modal.Body>
+          </ScrollView>
+        </Modal.Content>
+      </Modal>
             <Example prizes={prizes} />
             <Prizes prizes={prizes} />
           </ScrollView>
@@ -1024,6 +1060,7 @@ export default function TabThreeScreen() {
     </KeyboardAvoidingView>
   );
 }
+
 function AppBar() {
   const { value, setValue } = useContext(UserContext);
   return (

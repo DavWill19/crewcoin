@@ -444,7 +444,7 @@ export default function SendScreen() {
                                         {user.firstname + " " + user.lastname}
                                     </Text>
                                     <HStack justifyContent="center">
-                                        <Counter key={user._id} start={startFunc(0)} count={startFunc(formData[user._id + user.username])} min={0} onChange={(e) => {
+                                        <Counter key={user._id} start={startFunc(0)} count={startFunc(formData[user._id + user.username])} min={0} max={100} onChange={(e) => {
 
                                             setData({
                                                 ...formData,
