@@ -2,7 +2,7 @@
   "expo": {
     "name": "Crew Coin",
     "slug": "crew-coin",
-    "version": "9.0.0",
+    "version": "10.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
@@ -19,7 +19,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "infoPlist": {
@@ -29,12 +31,11 @@
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 9,
+      "versionCode": 10,
       "package": "com.davwill19.crewcoin"
     },
     "web": {
@@ -50,6 +51,11 @@
           "mode": "production"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9d772454-5796-4a79-a87a-35bb0dc123af"
+      }
+    }
   }
 }
