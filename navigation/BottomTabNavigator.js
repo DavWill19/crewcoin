@@ -34,7 +34,7 @@ export default function BottomTabNavigator() {
 
   return (
     <BottomTab.Navigator
-      screenOptions={{ style: { elevation: 20 }, headerShown: false, tabBarActiveTintColor: Colors[colorScheme].tint }}
+      screenOptions={{ style: { elevation: 20, paddingBottom: 20 }, headerShown: false, tabBarActiveTintColor: Colors[colorScheme].tint }}
     >
       <BottomTab.Screen
         name="My Wallet"
@@ -108,7 +108,8 @@ function TabBarIcon(props) {
 function TabOneNavigator(props) {
   const TabOneStack = createStackNavigator();
   return (
-    <TabOneStack.Navigator  screenOptions={{ headerShown: false }}>
+    <TabOneStack.Navigator
+      screenOptions={{ headerShown: false }}>
       <TabOneStack.Screen
 
         {...props}

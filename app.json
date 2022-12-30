@@ -2,8 +2,9 @@
   "expo": {
     "name": "Crew Coin",
     "slug": "crew-coin",
-    "version": "10.0.0",
+    "version": "11.0.0",
     "orientation": "portrait",
+    "backgroundColor": "#ffffff",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -36,7 +37,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 10,
+      "versionCode": 11,
       "package": "com.davwill19.crewcoin"
     },
     "web": {
@@ -48,7 +49,6 @@
         {
           "icon": "./assets/images/adaptive-iconsmall.png",
           "color": "#ffffff",
-          "sounds": "./assets/chaching.wav",
           "mode": "production"
         }
       ]

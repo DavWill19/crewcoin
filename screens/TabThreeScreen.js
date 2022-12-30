@@ -462,14 +462,14 @@ export default function TabThreeScreen() {
       return (
 
         <>
-          <PresenceTransition visible initial={{
+          {/* <PresenceTransition visible initial={{
             opacity: 0
           }} animate={{
             opacity: 1,
             transition: {
               duration: 2500
             }
-          }}>
+          }}> */}
             <Box
               shadow={2}
               mt="2"
@@ -517,7 +517,7 @@ export default function TabThreeScreen() {
                 </Button>
               </Stack>
             </Box>
-          </PresenceTransition>
+          {/* </PresenceTransition> */}
         </>
       )
     } else {
@@ -827,14 +827,14 @@ export default function TabThreeScreen() {
     return (
       prizes.map(prize => {
         return (
-          <PresenceTransition visible initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1,
-            transition: {
-              duration: 2050
-            }
-          }}>
+          // <PresenceTransition visible initial={{
+          //   opacity: 0
+          // }} animate={{
+          //   opacity: 1,
+          //   transition: {
+          //     duration: 2050
+          //   }
+          // }}>
             <Box
               pt={5}
               shadow={2}
@@ -892,7 +892,7 @@ export default function TabThreeScreen() {
               </Stack>
               {deleteButton(prize)}
             </Box>
-          </PresenceTransition>
+          // </PresenceTransition>
         )
       })
     )

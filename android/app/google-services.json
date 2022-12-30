@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "881980133841",
+    "project_id": "crewcoinandroid",
+    "storage_bucket": "crewcoinandroid.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881980133841:android:f82e39f100208955a8d0f0",
+        "android_client_info": {
+          "package_name": "com.davwill19.crewcoin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "881980133841-a4bfqcnp8boaq3rbeaanh3d5fabr0s72.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATmO6mR1CtNtyoWRZFJZdi2Fu2b6aysJw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "881980133841-a4bfqcnp8boaq3rbeaanh3d5fabr0s72.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

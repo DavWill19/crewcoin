@@ -456,14 +456,14 @@ export default function TabTwoScreen() {
       return (
         <>
           {Spinner()}
-          <PresenceTransition visible initial={{
+          {/* <PresenceTransition visible initial={{
             opacity: 0
           }} animate={{
             opacity: 1,
             transition: {
               duration: 2500
             }
-          }}>
+          }}> */}
             <Box
               shadow={2}
               mt="2"
@@ -507,7 +507,7 @@ export default function TabTwoScreen() {
                 <Button backgroundColor="cyan.500" shadow={3} onPress={() => { handlePost() }}> Post </Button>
               </Stack>
             </Box>
-          </PresenceTransition>
+          {/* </PresenceTransition> */}
         </>
 
       )
@@ -792,14 +792,14 @@ export default function TabTwoScreen() {
           onRefresh={onRefresh}
           data={postsData}
           renderItem={({ item, index }) =>
-            <PresenceTransition visible initial={{
-              opacity: 0
-            }} animate={{
-              opacity: 1,
-              transition: {
-                duration: 2050
-              }
-            }}>
+            // <PresenceTransition visible initial={{
+            //   opacity: 0
+            // }} animate={{
+            //   opacity: 1,
+            //   transition: {
+            //     duration: 2050
+            //   }
+            // }}>
               <Box
                 pt="5"
                 shadow={2}
@@ -861,7 +861,7 @@ export default function TabTwoScreen() {
                   <Text onPress={() => { showViewers(item) }} mb={2} fontSize={13} color="#BCBCBC" ml="1">{views(item)}</Text>
                 </HStack>
               </Box>
-            </PresenceTransition>
+            // </PresenceTransition>
           }
           ListHeaderComponent={() => Post()}
           keyExtractor={item => item._id}
@@ -879,16 +879,16 @@ export default function TabTwoScreen() {
         <ImageBackground imageStyle=
           {{ opacity: 0.7 }} style={styles.image} source={require('../assets/images/splashbg2.png')} resizeMode="cover" >
           <View>
-            <PresenceTransition visible initial={{
+            {/* <PresenceTransition visible initial={{
               opacity: 0
             }} animate={{
               opacity: 1,
               transition: {
                 duration: 1050
               }
-            }}>
+            }}> */}
               <Posts />
-            </PresenceTransition>
+            {/* </PresenceTransition> */}
           </View>
         </ImageBackground>
       </NativeBaseProvider>

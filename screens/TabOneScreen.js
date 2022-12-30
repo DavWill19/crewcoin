@@ -30,13 +30,36 @@ export default function TabOneScreen({ route, navigation }) {
 
   function createMargin() {
     if (Dimensions.get("window").height > 900) {
-        return 5;
+      return 5;
     }
     else {
-        return 0;
+      return 0;
     }
-}
-
+  }
+  function createPadding() {
+    if (Dimensions.get("window").height > 900) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+  function createWidth() {
+    if (Dimensions.get("window").height > 900) {
+      return 400;
+    }
+    else {
+      return 365;
+    }
+  }
+  function createHeight() {
+    if (Dimensions.get("window").height > 900) {
+      return 252;
+    }
+    else {
+      return 230;
+    }
+  }
   const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
   }
@@ -236,7 +259,7 @@ export default function TabOneScreen({ route, navigation }) {
     if (value.admin && circulationTotal > -1) {
       return (
         <Center mt={createMargin()}>
-          <Text style={{
+          <Text p={createPadding()} style={{
             position: "relative",
             fontSize: 17,
             fontWeight: 'bold',
@@ -299,6 +322,8 @@ export default function TabOneScreen({ route, navigation }) {
                 <View mt={createMargin()} shadow={7}>
                   <Image
                     shadow={7}
+                    height={createHeight()}
+                    width={createWidth()}
                     style={styles.credit}
                     alt="creditcard1"
                     source={require('../assets/images/crewcoincredit.png')}
@@ -312,6 +337,7 @@ export default function TabOneScreen({ route, navigation }) {
             <Center mt={createMargin()}>
 
               <Stack borderColor="#b2c2d1"
+                width={"90%"}
                 borderWidth={1}
                 style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)' }}
                 px={2}
@@ -324,8 +350,8 @@ export default function TabOneScreen({ route, navigation }) {
                 <Divider />
 
                 <Box
+                  p={createPadding()}
                   shadow={3}
-                  w="310"
                   rounded="lg"
                   borderColor="blueGray.400"
                   borderWidth="1"
@@ -353,9 +379,9 @@ export default function TabOneScreen({ route, navigation }) {
                   </TouchableOpacity>
                 </Box>
                 <Box
+                  p={createPadding()}
                   shadow={3}
                   mt={3}
-                  w="310"
                   rounded="lg"
                   borderColor="blueGray.400"
                   borderWidth="1"
@@ -384,9 +410,9 @@ export default function TabOneScreen({ route, navigation }) {
                   </TouchableOpacity>
                 </Box>
                 <Box
+                  p={createPadding()}
                   shadow={3}
                   mt={3}
-                  w="310"
                   rounded="lg"
                   borderColor="blueGray.400"
                   borderWidth="1"
@@ -461,7 +487,7 @@ function AppBar(value) {
 const styles = StyleSheet.create({
 
   topper: {
-    width: 420,
+    width: 460,
     resizeMode: 'contain',
     position: 'relative',
     resizeMode: 'contain',
@@ -503,8 +529,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   credit: {
-    height: 230,
-    width: 365,
     resizeMode: 'contain',
     borderRadius: 8,
     position: 'relative',
