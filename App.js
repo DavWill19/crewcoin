@@ -12,7 +12,7 @@ import { useColorScheme } from "react-native";
 export default function App() {
   const isLoadingComplete = useLoadedAssets();
   const colorScheme = useColorScheme();
-
+// crew coin
   if (!isLoadingComplete) {
     return null;
   } else {
