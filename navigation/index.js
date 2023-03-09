@@ -2,6 +2,7 @@
 // https://reactnavigation.org/docs/getting-started
 import {
   DarkTheme,
+  LightTheme,
   DefaultTheme,
   NavigationContainer,
 } from "@react-navigation/native";
@@ -23,7 +24,7 @@ export default function Navigation({ colorScheme }) {
     <UserContext.Provider value={{ value, setValue }}>
       <NavigationContainer
         linking={LinkingConfiguration}
-        theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        theme={colorScheme === "dark" ? LightTheme : DefaultTheme}
       >
         <RootNavigator />
 

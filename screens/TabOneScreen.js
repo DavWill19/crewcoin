@@ -1,7 +1,7 @@
-import { StyleSheet, ImageBackground, RefreshControl, Dimensions } from "react-native";
+import { StyleSheet, ImageBackground, RefreshControl, View, Dimensions } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { NativeBaseProvider, Image, VStack, View, Stack, Box, Heading, Divider, Flex, HStack, Text, Center, PresenceTransition, } from 'native-base';
+import { NativeBaseProvider, Image, VStack, Stack, Box, Heading, Divider, Flex, HStack, Text, Center, PresenceTransition, } from 'native-base';
 import { useIsFocused } from '@react-navigation/native';
 import { useContext, useEffect, useCallback } from "react";
 import { useState } from "react";
@@ -9,6 +9,10 @@ import { UserContext } from "./UserContext";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import * as Notifications from "expo-notifications"
 import * as Permissions from "expo-permissions"
+import * as SecureStore from 'expo-secure-store';
+// import { TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+// import { AdMobBanner } from 'expo-ads-admob';
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => {
@@ -64,6 +68,7 @@ export default function TabOneScreen({ route, navigation }) {
     return new Promise(resolve => setTimeout(resolve, timeout));
   }
 
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     wait(2000).then(() => setRefreshing(false),
@@ -84,7 +89,9 @@ export default function TabOneScreen({ route, navigation }) {
             let self = res.filter(user => user.username === value.username);
             let admin = res.filter(user => user.admin === true);
             setValue({ ...value, balance: self[0].balance, adminEmail: admin[0].username, organization: admin[0].organization });
+            SecureStore.setItemAsync("adminEmail", admin[0].username);
             setOrganization(admin[0].organization);
+            console.log(value.adminEmail)
           } else {
             Alert.alert(
               "Error",
@@ -218,7 +225,9 @@ export default function TabOneScreen({ route, navigation }) {
             setValue(self[0]);
             let admin = res.filter(user => user.admin === true);
             setValue({ ...value, adminEmail: admin[0].username, organization: admin[0].organization });
+            SecureStore.setItemAsync("adminEmail", admin[0].username);
             setOrganization(admin[0].organization);
+            console.log(value.adminEmail, "email")
           } else {
             Alert.alert(
               "Error",
@@ -290,177 +299,177 @@ export default function TabOneScreen({ route, navigation }) {
     }
   }
   return (
-    <NativeBaseProvider>
-      {AppBar(value)}
-      <Divider />
-      <ImageBackground style={styles.image} alt="bg" source={require('../assets/images/bgblue.png')} resizeMode="cover" >
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-            />
-          }
-        >
-          <VStack h={"100%"} mt={2} flexDirection="column" justifyContent="space-around">
-            <Center>
-              <Stack w={"100%"}>
-                <Image alt="topper" style={styles.topper} source={require('../assets/images/crewcoinwhite.png')} resizeMode="contain" />
-              </Stack>
-            </Center>
-            <PresenceTransition visible initial={{
-              opacity: 0,
-              scale: 0
-            }} animate={{
-              opacity: 1,
-              scale: 1,
-              transition: {
-                duration: 450
-              }
-            }}>
+    <>
+      <NativeBaseProvider>
+        {AppBar(value)}
+        <Divider />
+        <ImageBackground style={styles.image} alt="bg" source={require('../assets/images/bgblue.png')} resizeMode="cover" >
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
+          >
+            <VStack h={"100%"} mt={2} flexDirection="column" justifyContent="space-around">
               <Center>
-                <View mt={createMargin()} shadow={7}>
-                  <Image
-                    shadow={7}
-                    height={createHeight()}
-                    width={createWidth()}
-                    style={styles.credit}
-                    alt="creditcard1"
-                    source={require('../assets/images/crewcoincredit.png')}
-                  />
-                  <Text shadow={7} style={styles.text}>{value.firstname + " " + value.lastname}</Text>
-                  <Text shadow={7} style={styles.text2}>{organization}</Text>
-                  <Image shadow={7} style={styles.creditlogo} alt="logo" source={require('../assets/images/creditcardlogo.png')} />
-                </View>
+                <Stack w={"100%"}>
+                  <Image alt="topper" style={styles.topper} source={require('../assets/images/crewcoinwhite.png')} resizeMode="contain" />
+                </Stack>
               </Center>
-            </PresenceTransition>
-            <Center mt={createMargin()}>
-
-              <Stack borderColor="#b2c2d1"
-                width={"90%"}
-                borderWidth={1}
-                style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)' }}
-                px={2}
-                py={2}
-                mt={4}
-
-                borderRadius={5}
-                shadow={9}
-              >
-                <Divider />
-
-                <Box
-                  p={createPadding()}
-                  shadow={3}
-                  rounded="lg"
-                  borderColor="blueGray.400"
-                  borderWidth="1"
-                  _dark={{
-                    borderColor: "lightBlue.500",
-                    backgroundColor: "lightBlue.500",
-                  }}
-                  _web={{
-                    shadow: 2,
-                    borderWidth: 0,
-                  }}
-                  _light={{
-                    backgroundColor: "lightBlue.500",
-                  }}
-                >
-                  <Box>
-                  </Box>
-                  <TouchableOpacity onPress={() => { navigation.navigate('Send') }}>
-                    <HStack px="4" space={2} >
-                      <Ionicons name="md-arrow-redo-circle-outline" size={30} color="#292A2A" />
-                      <Heading color="#292A2A" size="lg" mx="auto" my="auto">
-                        Send Crew Coins
-                      </Heading>
-                    </HStack>
-                  </TouchableOpacity>
-                </Box>
-                <Box
-                  p={createPadding()}
-                  shadow={3}
-                  mt={3}
-                  rounded="lg"
-                  borderColor="blueGray.400"
-                  borderWidth="1"
-                  _dark={{
-                    borderColor: "blueGray.600",
-                    backgroundColor: "blueGray.700",
-                  }}
-                  _web={{
-                    shadow: 2,
-                    borderWidth: 0,
-                  }}
-                  _light={{
-                    backgroundColor: "lightBlue.500",
-                  }}
-                >
-                  <Box>
-                  </Box>
-                  <TouchableOpacity onPress={() => { navigation.navigate('History') }}>
-                    <HStack px="4" space={2}>
-                      <Ionicons name="md-list" size={30} color="#292A2A" />
-                      <Heading color="#292A2A" size="lg" mx="auto" my="auto">
-                        My Transactions
-                      </Heading>
-                      {alertNew(value.newTransaction)}
-                    </HStack>
-                  </TouchableOpacity>
-                </Box>
-                <Box
-                  p={createPadding()}
-                  shadow={3}
-                  mt={3}
-                  rounded="lg"
-                  borderColor="blueGray.400"
-                  borderWidth="1"
-                  _dark={{
-                    borderColor: "lightBlue.500",
-                    backgroundColor: "lightBlue.500",
-                  }}
-                  _web={{
-                    shadow: 2,
-                    borderWidth: 0,
-                  }}
-                  _light={{
-                    backgroundColor: "lightBlue.500",
-                  }}
-                >
-                  <Box>
-                  </Box>
-                  <TouchableOpacity onPress={() => { navigation.navigate('Settings') }}>
-                    <HStack space={2} px="4">
-                      <Ionicons name="md-settings-outline" size={30} color="#292A2A" />
-                      <Heading color="#292A2A" size="lg" mx="auto" my="auto">
-                        My Account
-                      </Heading>
-                    </HStack>
-                  </TouchableOpacity>
-                </Box>
-              </Stack>
-            </Center>
-            <Center mb={5}>
-              <Stack>
+              <PresenceTransition visible initial={{
+                opacity: 0,
+                scale: 0
+              }} animate={{
+                opacity: 1,
+                scale: 1,
+                transition: {
+                  duration: 450
+                }
+              }}>
                 <Center mt={createMargin()}>
-                  <Heading mt={1} size="lg" color="#282A3A">Balance:</Heading>
+                  <View mt={createMargin()} shadow={7}>
+                    <Image
+                      shadow={7}
+                      height={createHeight()}
+                      width={createWidth()}
+                      style={styles.credit}
+                      alt="creditcard1"
+                      source={require('../assets/images/crewcoincredit.png')}
+                    />
+                    <Text shadow={7} style={styles.text}>{value.firstname + " " + value.lastname}</Text>
+                    <Text shadow={7} style={styles.text2}>{organization}</Text>
+                    <Image shadow={7} style={styles.creditlogo} alt="logo" source={require('../assets/images/creditcardlogo.png')} />
+                  </View>
                 </Center>
-                <Center>
-                  <HStack shadow={3} style={styles.button}>
-                    <Image alt="gif" style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
-                    <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 39 }}>{superUser(value, value.balance)}</Text>
-                  </HStack>
-                </Center>
-              </Stack>
-            </Center>
-            {Circulation(userData)}
-          </VStack>
+              </PresenceTransition>
+              <Center mt={createMargin()}>
 
+                <Stack borderColor="#b2c2d1"
+                  width={"90%"}
+                  borderWidth={1}
+                  style={{ borderRadius: 10, backgroundColor: 'rgba(255,255,255, 0.8)' }}
+                  px={2}
+                  py={2}
+                  mt={4}
 
-        </ScrollView>
-      </ImageBackground>
-    </NativeBaseProvider>
+                  borderRadius={5}
+                  shadow={9}
+                >
+                  <Divider />
+
+                  <Box
+                    p={createPadding()}
+                    shadow={3}
+                    rounded="lg"
+                    borderColor="blueGray.400"
+                    borderWidth="1"
+                    _dark={{
+                      borderColor: "lightBlue.500",
+                      backgroundColor: "lightBlue.500",
+                    }}
+                    _web={{
+                      shadow: 2,
+                      borderWidth: 0,
+                    }}
+                    _light={{
+                      backgroundColor: "lightBlue.500",
+                    }}
+                  >
+                    <Box>
+                    </Box>
+                    <TouchableOpacity onPress={() => { navigation.navigate('Send') }}>
+                      <HStack px="4" space={2} >
+                        <Ionicons name="md-arrow-redo-circle-outline" size={30} color="#292A2A" />
+                        <Heading color="#292A2A" size="lg" mx="auto" my="auto">
+                          Send Crew Coins
+                        </Heading>
+                      </HStack>
+                    </TouchableOpacity>
+                  </Box>
+                  <Box
+                    p={createPadding()}
+                    shadow={3}
+                    mt={3}
+                    rounded="lg"
+                    borderColor="blueGray.400"
+                    borderWidth="1"
+                    _dark={{
+                      borderColor: "blueGray.600",
+                      backgroundColor: "blueGray.700",
+                    }}
+                    _web={{
+                      shadow: 2,
+                      borderWidth: 0,
+                    }}
+                    _light={{
+                      backgroundColor: "lightBlue.500",
+                    }}
+                  >
+                    <Box>
+                    </Box>
+                    <TouchableOpacity onPress={() => { navigation.navigate('History') }}>
+                      <HStack px="4" space={2}>
+                        <Ionicons name="md-list" size={30} color="#292A2A" />
+                        <Heading color="#292A2A" size="lg" mx="auto" my="auto">
+                          My Transactions
+                        </Heading>
+                        {alertNew(value.newTransaction)}
+                      </HStack>
+                    </TouchableOpacity>
+                  </Box>
+                  <Box
+                    p={createPadding()}
+                    shadow={3}
+                    mt={3}
+                    rounded="lg"
+                    borderColor="blueGray.400"
+                    borderWidth="1"
+                    _dark={{
+                      borderColor: "lightBlue.500",
+                      backgroundColor: "lightBlue.500",
+                    }}
+                    _web={{
+                      shadow: 2,
+                      borderWidth: 0,
+                    }}
+                    _light={{
+                      backgroundColor: "lightBlue.500",
+                    }}
+                  >
+                    <Box>
+                    </Box>
+                    <TouchableOpacity onPress={() => { navigation.navigate('Settings') }}>
+                      <HStack space={2} px="4">
+                        <Ionicons name="md-settings-outline" size={30} color="#292A2A" />
+                        <Heading color="#292A2A" size="lg" mx="auto" my="auto">
+                          My Account
+                        </Heading>
+                      </HStack>
+                    </TouchableOpacity>
+                  </Box>
+                </Stack>
+              </Center>
+              <Center mb={5}>
+                <Stack>
+                  <Center mt={createMargin()}>
+                    <Heading mt={1} size="lg" color="#282A3A">Balance:</Heading>
+                  </Center>
+                  <Center>
+                    <HStack shadow={3} style={styles.button}>
+                      <Image alt="gif" style={styles.coin2} source={require('../assets/images/coinIcon2.gif')} />
+                      <Text shadow={1} style={{ color: "#ffcc00", fontSize: 48, fontWeight: "700", paddingTop: 39 }}>{superUser(value, value.balance)}</Text>
+                    </HStack>
+                  </Center>
+                </Stack>
+              </Center>
+              {Circulation(userData)}
+            </VStack>
+          </ScrollView>
+        </ImageBackground>
+      </NativeBaseProvider>
+    </>
   );
 }
 
@@ -468,7 +477,6 @@ function AppBar(value) {
   return (
     <>
       <Box safeAreaTop backgroundColor="#f2f2f2" />
-
       <HStack bg='#f2f2f2' px="5" justifyContent='space-between' alignItems='center'>
         <HStack space="4" alignItems='center'>
           <Image alt="logo" style={styles.coin} source={require('../assets/images/crewcoinlogo.png')} />

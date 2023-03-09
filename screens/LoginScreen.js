@@ -15,40 +15,45 @@ import {
 } from "native-base"
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
-import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView } from "react-native";
+import { StyleSheet, Image, Alert, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { Component, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import { getNextTriggerDateAsync } from "expo-notifications";
-
-
-
-
+import { Ionicons } from '@expo/vector-icons';
 
 
 export function Login() {
     const navigation = useNavigation();
     const { value, setValue } = useContext(UserContext);
-    const [formData, setData] = React.useState({ ...formData, username: username });
+    const [formData, setData] = React.useState({ ...formData, username: username, password: password });
     const [username, setUsername] = React.useState("");
+    const [password, setPassword] = React.useState("");
     const [user, setUser] = React.useState({});
     const [isLoading, setIsLoading] = React.useState(false);
+    const [passwordType , setPasswordType] = React.useState("password");
 
-    async function getValueFor(key) {
-        let result = await SecureStore.getItemAsync(key);
-        if (result) {
+
+    async function getValueFor(key1, key2) {
+        let result = await SecureStore.getItemAsync(key1);
+        let result2 = await SecureStore.getItemAsync(key2);
+        if (result !== null && result2 !== null) {
             setUsername(result);
-        } else {
-            setUsername("");
+            setPassword(result2);
         }
+        else {
+            console.log("no value stored");
+        }
+
     }
-    getValueFor("username");
+    getValueFor("username", "password");
+
 
 
     useEffect(() => {
         if (username.length > 0) {
-            setData({ ...formData, username: username });
+            setData({ ...formData, username: username, password: password });
         }
-    }, [username]);
+    }, [username, password]);
 
 
 
@@ -64,6 +69,7 @@ export function Login() {
 
     return (
         <View width="80%" backgroundColor="#fff">
+
             {Spinner()}
             <Box mx="auto" safeArea p="2" py="4" w="100%" maxW="340" >
                 <Image style={styles.title} source={require('../assets/images/crewcoinlogo.png')} />
@@ -86,7 +92,27 @@ export function Login() {
                     </FormControl>
                     <FormControl>
                         <FormControl.Label>Password</FormControl.Label>
-                        <Input type="password" onChangeText={(value) => setData({ ...formData, password: value })} />
+                        <Input defaultValue={password} type={passwordType} onChangeText={(value) => setData({ ...formData, password: value })} />
+                        <Button ml="auto"
+                            onPress={() => {
+                                if (passwordType === "password") {
+                                    setPasswordType("text");
+                                } else {
+                                    setPasswordType("password");
+                                }
+                            }}
+                            variant="link"
+                            _text={{
+                                fontSize: "xs",
+                                fontWeight: "medium",
+                                color: "coolGray.600",
+                                _dark: {
+                                    color: "warmGray.200",
+                                },
+                            }}
+                        >
+                           <Ionicons name="eye" size={12} color="#BCBCBC"> {passwordType === "password" ? "Show" : "Hide"} </Ionicons>
+                        </Button>
                         <Link
                             _text={{
                                 color: "indigo.500",
@@ -153,6 +179,8 @@ export function Login() {
                     </HStack>
                 </VStack>
             </Box>
+
+
         </View>
     )
 }
@@ -164,6 +192,7 @@ async function save(key, value) {
 
 function handleSubmit(formData, navigation, setUser, setValue, setData, isLoading, setIsLoading) {
     setIsLoading(true);
+    save("password", formData.password);
     fetch("https://crewcoin.herokuapp.com/crewuser/login", {
         method: "POST",
         headers: {

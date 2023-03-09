@@ -1,5 +1,5 @@
 import { StyleSheet, View, ImageBackground, Image, TouchableOpacity, Alert, KeyboardAvoidingView, RefreshControl } from "react-native";
-import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button, Modal, FormControl } from 'native-base';
+import { NativeBaseProvider, PresenceTransition, Box, Input, Heading, Divider, Stack, HStack, Text, VStack, Center, Button, Modal, Spacer } from 'native-base';
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import prizes from './sample';
 import { useContext, useEffect, useMemo, useCallback, useState, useRef } from "react";
@@ -30,8 +30,11 @@ export default function TabThreeScreen() {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showModal2, setShowModal2] = useState(false);
   const [prizeData, setPrize] = useState({});
   const [kbOffset, setKbOffset] = useState(0);
+  const [disable, setDisable] = useState(false);
+  const [myRequests, setMyRequests] = useState([]);
 
 
   const wait = (timeout) => {
@@ -44,10 +47,10 @@ export default function TabThreeScreen() {
         <Image
           borderColor="gray.200"
           shadow={9}
-          width={300}
+          width={280}
           alt={prizes.createdAt}
           source={{ uri: prizes.image }}
-          style={{ width: 200, height: 200, borderRadius: 5, resizeMode: 'contain' }}
+          style={{ width: 280, height: 280, borderRadius: 5, resizeMode: 'contain' }}
         />
       )
     } else {
@@ -74,7 +77,7 @@ export default function TabThreeScreen() {
         .then(res => res.json())
         .then(res => {
           if (res.success) {
-              setPrizes(res.prizes);
+            setPrizes(res.prizes);
           } else {
             Alert.alert(
               "Something went wrong",
@@ -137,7 +140,57 @@ export default function TabThreeScreen() {
 
   })
 
+  function getRequests() {
+    const portalId = value.portalId;
+    console.log(portalId)
+    fetch(`https://crewcoin.herokuapp.com/requests/${portalId}`, {
+      method: "GET",
+      headers: {
+        authorization: `bearer ${token}`,
+        credentials: "same-origin",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        mode: "cors"
+      },
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          setMyRequests(res.requests);
+          console.log(res);
+        } else {
+          Alert.alert(
+            "Something went wrong",
+            `Error`,
+            [
+              { text: "OK", onPress: () => console.log("OK Pressed") }
+            ]
+          );
+        }
+      })
+      .catch(err => {
+        Alert.alert(
+          `Error`,
+          "Please check internet connection!",
+          [
 
+            { text: "OK", onPress: () => console.log("OK Pressed") }
+          ]
+        )
+      }
+      )
+      .catch((error) => {
+        Alert.alert(
+          "Error",
+          "Please login again",
+          [
+            { text: "OK", onPress: () => console.log("OK Pressed") }
+          ]
+        )
+        navigation.navigate("Login");
+      }
+      )
+  }
 
   async function getValueFor(key) {
     let result = await SecureStore.getItemAsync(key);
@@ -166,6 +219,7 @@ export default function TabThreeScreen() {
   }
 
   useEffect(() => {
+    getRequests();
     setIsLoading(true);
     // Permission for iOS
     Permissions.getAsync(Permissions.NOTIFICATIONS)
@@ -296,6 +350,7 @@ export default function TabThreeScreen() {
   function Example() {
     const [postData, setPost] = useState({});
     const imageUrl = postData.imageUrl;
+    const [requestData, setRequest] = useState({});
 
     function handlePost(setPrizes) {
       let user = userData.filter(el => el.username !== value.username && el.pushToken.length > 0);
@@ -382,6 +437,7 @@ export default function TabThreeScreen() {
                 }
                 );
               setIsLoading(false);
+              setDisable(false);
             })
             .catch((error) => {
               Alert.alert(
@@ -393,10 +449,110 @@ export default function TabThreeScreen() {
               )
               navigation.navigate("Login");
             })
-        }, 4000);
+        }, 3000);
       }
 
     }
+
+    function handleRequest() {
+      if (requestData.title || requestData.description) {
+        setIsLoading(true);
+        const portalId = value.portalId;
+        fetch(`https://crewcoin.herokuapp.com/requests/${portalId}`, {
+          method: "POST",
+          headers: {
+            authorization: `bearer ${token}`,
+            credentials: "same-origin",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            mode: "cors"
+          },
+          body: JSON.stringify({
+            "title": `${value.firstname} ${value.lastname} requests: ${requestData.title}`,
+            "description": requestData.description,
+            "portalId": value.portalId,
+          }),
+        })
+
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              triggerPushNotificationHandler(adminPushToken, `New Store Request!`, `${requestData.title} from: ${value.firstname} ${value.lastname}`);
+              Alert.alert(
+                "Thank you!",
+                `Your request has been sent!`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
+              setRequest({ title: "", description: "" });
+            } else {
+              Alert.alert(
+                "Something went wrong",
+                `Error`,
+                [
+                  { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+              );
+            }
+          })
+          .catch(err => {
+            Alert.alert(
+              `${err}`,
+              "Please check internet connection!",
+              [
+
+                { text: "OK", onPress: () => console.log("OK Pressed") }
+              ]
+            )
+          }
+          );
+        setDisable(false);
+        setIsLoading(false);
+      }
+      else {
+        Alert.alert(
+          "Please fill in all fields!",
+          "",
+          [
+            { text: "OK", onPress: () => console.log("OK Pressed") }
+          ]
+        );
+      }
+      setDisable(false);
+    }
+
+    function viewedRequest() {
+      fetch(`https://crewcoin.herokuapp.com/requests/${value.portalId}`, {
+        method: "PUT",
+        headers: {
+          authorization: "jwt",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "user": `${value.firstname} ${value.lastname}`,
+
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            setMyRequests(res.requests)
+            console.log("success- updated views")
+          } else {
+            console.log("error")
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        });
+    }
+
+
+
 
 
     let getImageFromCamera = async () => {
@@ -436,6 +592,8 @@ export default function TabThreeScreen() {
       setPost({ ...postData, imageUrl: processedImage.uri, image: processedImage });
     }
 
+
+
     if (value.admin) {
       function TempImage() {
         if (imageUrl) {
@@ -457,8 +615,19 @@ export default function TabThreeScreen() {
         }
       }
       const memoizedTempImage = useMemo(TempImage);
-
-
+      let sortedRequests = myRequests.sort(function (a, b) {
+        // Turn your strings into dates, and then subtract them
+        // to get a value that is either negative, positive, or zero.
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      function newRequest() {
+        const newRequests = myRequests.filter((item) => {
+          return item.viewed.includes(value.firstname + " " + value.lastname) === false;
+        }
+        )
+        return newRequests.length;
+      }
+      console.log(newRequest(), "new requests")
       return (
 
         <>
@@ -470,58 +639,194 @@ export default function TabThreeScreen() {
               duration: 2500
             }
           }}> */}
-            <Box
-              shadow={2}
-              mt="2"
-              mb="2"
-              pt="2"
-              style={styles.image2}
-              maxW="360"
-              rounded="lg"
-              overflow="hidden"
-              borderColor="gray.300"
-              borderWidth="1"
-              _dark={{
-                borderColor: "gray.900",
-                backgroundColor: "gray.900",
-              }}
-              _web={{
-                shadow: 2,
-                borderWidth: 1,
-              }}
-              _light={{
-                backgroundColor: "gray.50",
-              }}
-            >
-              <Stack w="100%" p="4" space={3}>
-                <HStack alignItems="center">
-                  <Heading size="md" ml="-1" >
-                    Add New Store Item
-                  </Heading>
+          {/* modal style box for requests */}
+          <Box
+            style={showModal2 ? { display: "flex" } : { display: "none" }}
+            position="absolute"
+            top={2}
+            mx="auto"
+            my="0"
+            mb="2"
+            pt="2"
+            rounded="lg"
+            backgroundColor="amber.300"
+            width={"100%"}
+            height={"180%"}
+            zIndex={999}
+          >
+            <Center>
+              <Heading fontSize="xl"
+                color="gray" mt="1">
+                My Store Item Requests
+              </Heading>
+              <Divider mt="2" mb="2" width="20%" />
+              <Text mb="2" color="gray" fontSize="xs" italic>
+                (This is where your crew can request items for your store)
+              </Text>
+              <Box position="absolute" top={"-30%"} right={0}>
+                <TouchableOpacity onPress={() => { setShowModal2(false); }}>
+                  <Button my="2" backgroundColor="light" onPress={() => { setShowModal2(false); }}>
+                    <Ionicons name="md-close-circle" size={25} color="darkGray" />
+                  </Button>
+                </TouchableOpacity>
+              </Box>
+            </Center>
+            <ScrollView mt="5" mb="5">
+              {sortedRequests.map((request, index) => {
+
+
+                return (
+                  <Stack
+                    p="4"
+                    key={index}
+                    shadow={2}
+                    width={"100%"}
+                    backgroundColor="gray.50"
+                    mb=".35"
+
+                  >
+                    <Center>
+                      <Heading size="sm" >
+                        {request.title}
+                      </Heading>
+                      <Divider backgroundColor="gray.200" mt="2" mb="2" width="20%" />
+                      <Text>
+                        {request.description}
+                      </Text>
+                      <Divider backgroundColor="gray.200" mt="2" mb="2" width="100%" />
+                      <HStack>
+                        <Ionicons style={{ paddingRight: 5 }
+                        } name="md-time-outline" size={16} color="black" />
+                        <Text fontSize="12">
+                          Requested: {moment(request.createdAt).format("MMMM Do YYYY, h:mm a")}
+                        </Text>
+                      </HStack>
+                    </Center>
+                  </Stack>
+                )
+              })}
+
+
+            </ScrollView>
+          </Box>
+          <Box
+            style={value.admin ? { display: "flex" } : { display: "none" }}
+            mx="auto"
+            my="0"
+            mb="2"
+            pt="2"
+            rounded="lg"
+            width={["98%", "98%", "98%", "98%"]}
+          >
+            <Center>
+              {/* yellow dot */}
+              <Ionicons name="ios-chatbox-ellipses" color="#FF5733" size={20} style={newRequest() > 0 ? { display: "flex", top: 3, right: 69, position: "absolute", zIndex: 999 } : { display: "none" }} />
+              <Button width="98%" backgroundColor="gray.700" shadow={3} onPress={() => { setShowModal2(true); viewedRequest(); }}>
+                View My Store Item Requests
+              </Button>
+            </Center>
+          </Box>
+          <Box
+            shadow={2}
+            mx="auto"
+            mt="0"
+            mb="2"
+            pt="2"
+            style={styles.image2}
+            maxW="98%"
+            rounded="lg"
+            overflow="hidden"
+            borderColor="gray.300"
+            borderWidth="1"
+            _dark={{
+              borderColor: "gray.900",
+              backgroundColor: "gray.900",
+            }}
+            _web={{
+              shadow: 2,
+              borderWidth: 1,
+            }}
+            _light={{
+              backgroundColor: "gray.50",
+            }}
+          >
+            <Stack w="100%" p="4" space={3}>
+              <HStack space={4}>
+                <Heading size="md" >
+                  Add New Store Item
+                </Heading>
+                <Spacer />
+                <Center>
                   <TouchableOpacity onPress={() => { getImageFromCamera() }}>
                     <Image mt="4" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
                   </TouchableOpacity>
+                </Center>
+                <Center>
                   <TouchableOpacity onPress={() => { getImageFromGallery() }}>
                     <Image mt="4" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
                   </TouchableOpacity>
-                </HStack>
-                <Center>
-                  {memoizedTempImage}
                 </Center>
-                <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
-                <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
-                <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value.replace(/[^0-9]/g, '') })} placeholder="Price" />
+              </HStack>
+              <Center>
+                {memoizedTempImage}
+              </Center>
+              <Input value={postData.title} onChangeText={(value) => setPost({ ...postData, title: value })} placeholder="Title" />
+              <Input value={postData.description} onChangeText={(value) => setPost({ ...postData, description: value })} placeholder="Description" />
+              <Input value={postData.cost} onChangeText={(value) => setPost({ ...postData, cost: value.replace(/[^0-9]/g, '') })} placeholder="Price" />
 
-                <Button backgroundColor="cyan.500" shadow={3} onPress={() => { handlePost(setPrizes) }}>
-                  Post New Item
-                </Button>
-              </Stack>
-            </Box>
+              <Button backgroundColor="cyan.500" shadow={3} onPress={() => { setDisable(true); handlePost(setPrizes) }}>
+                Post New Item
+              </Button>
+            </Stack>
+          </Box>
           {/* </PresenceTransition> */}
         </>
       )
     } else {
-      return null
+      return (
+        <Box
+          shadow={2}
+          mx="auto"
+          mt="2"
+          mb="2"
+          pt="2"
+          style={styles.image2}
+          maxW="98%"
+          rounded="lg"
+          overflow="hidden"
+          borderColor="gray.300"
+          borderWidth="1"
+          _dark={{
+            borderColor: "gray.900",
+            backgroundColor: "gray.900",
+          }}
+          _web={{
+            shadow: 2,
+            borderWidth: 1,
+          }}
+          _light={{
+            backgroundColor: "gray.50",
+          }}
+        >
+          <Stack w="100%" p="4" space={3}>
+            <VStack space={2}>
+              <Heading size="md" >
+                Suggest a New Store Item
+              </Heading>
+              <Spacer />
+              <Center>
+                <Input value={requestData.title} onChangeText={(value) => setRequest({ ...requestData, title: value })} placeholder="Requested Item" />
+                <Input mt="2" value={requestData.description} onChangeText={(value) => setRequest({ ...requestData, description: value })} placeholder="Description / URL" />
+                <Button mt="2" disabled={disable} backgroundColor="cyan.500" shadow={3} onPress={() => { setDisable(true); handleRequest() }}>
+                  Request Item
+                </Button>
+                <Text color="#B0B0B0" mt="2" mx="auto" italic fontSize="xs">*Send a message to request new items for the store</Text>
+              </Center>
+            </VStack>
+          </Stack>
+        </Box>
+
+      )
     }
   }
 
@@ -529,6 +834,7 @@ export default function TabThreeScreen() {
     const { value, setValue } = useContext(UserContext);
     const [prizesData, setPrizes] = useState([]);
     useEffect(() => {
+
       fetch(`https://crewcoin.herokuapp.com/store/${value.portalId}`, {
         method: "GET",
         headers: {
@@ -585,10 +891,10 @@ export default function TabThreeScreen() {
           <Image
             borderColor="gray.200"
             shadow={9}
-            width={300}
+            width={350}
             alt={prizes.createdAt}
             source={{ uri: prizes.image }}
-            style={{ width: 300, height: 300, borderRadius: 5, resizeMode: 'contain' }}
+            style={{ width: 320, height: 320, borderRadius: 5, resizeMode: 'contain' }}
           />
         )
       } else {
@@ -601,7 +907,7 @@ export default function TabThreeScreen() {
     function deleteButton(prize) {
       if (value.admin) {
         return (
-          <Button colorScheme="rose" mb="2" width="90%" onPress={() => {
+          <Button colorScheme="red" mb="2" width="90%" onPress={() => {
             Alert.alert(
               "Remove Prize",
               "Are you sure you want to remove this prize?",
@@ -835,12 +1141,15 @@ export default function TabThreeScreen() {
           //     duration: 2050
           //   }
           // }}>
+          <Stack style={showModal2 ? { display: "none" } : { display: "flex" }}>
             <Box
+            key={prize._id}
               pt={5}
               shadow={2}
               style={styles.image5}
-              mb="2"
-              maxW="360"
+              mb="1"
+              mx="auto"
+              maxW="98%"
               rounded="lg"
               overflow="hidden"
               borderColor="gray.300"
@@ -892,6 +1201,7 @@ export default function TabThreeScreen() {
               </Stack>
               {deleteButton(prize)}
             </Box>
+          </Stack>
           // </PresenceTransition>
         )
       })
@@ -957,42 +1267,44 @@ export default function TabThreeScreen() {
     const descriptionRef = useRef("");
     const costRef = useRef("");
     const idRef = useRef("");
-  
+
     titleRef.current = prizeData.title;
     descriptionRef.current = prizeData.description;
     costRef.current = prizeData.cost;
     idRef.current = prizeData._id;
-  
+
     return (
       <>
-      <Box>
-      <Text>Item Title:</Text>
-      <Input defaultValue={prizeData.title} onChangeText={(value => titleRef.current = value)} />
+        <Box>
+          <Text>Item Title:</Text>
+          <Input defaultValue={prizeData.title} onChangeText={(value => titleRef.current = value)} />
           <Text>Item Description:</Text>
-      <Input defaultValue={prizeData.description} onChangeText={(value) => descriptionRef.current = value} />
-      <Text>Item Cost:</Text>
-      <Input defaultValue={`${prizeData.cost}`} onChangeText={(value) => costRef.current = value.replace(/[^0-9]/g, '')} />
-    </Box>
-    <Modal.Footer>
-                <Button.Group mt={5} space={2}>
-  
-                  <Button variant="outline" colorScheme="blueGray" onPress={() => {
-                    setShowModal(false);
-                  }}>
-                    Cancel
-                  </Button>
-                  <Button onPress={() => {
-                    updatePrize({title: titleRef.current, description: descriptionRef.current, cost: costRef.current, _id: idRef.current});
-                    setShowModal(false);
-                    console.log(prizeData)
-                  }}>
-                    Save
-                  </Button>
-                </Button.Group>
-              </Modal.Footer>
-              </>
+          <Input defaultValue={prizeData.description} onChangeText={(value) => descriptionRef.current = value} />
+          <Text>Item Cost:</Text>
+          <Input defaultValue={`${prizeData.cost}`} onChangeText={(value) => costRef.current = value.replace(/[^0-9]/g, '')} />
+        </Box>
+        <Modal.Footer>
+          <Button.Group mt={5} space={2}>
+
+            <Button variant="outline" colorScheme="blueGray" onPress={() => {
+              setShowModal(false);
+            }}>
+              Cancel
+            </Button>
+            <Button onPress={() => {
+              updatePrize({ title: titleRef.current, description: descriptionRef.current, cost: costRef.current, _id: idRef.current });
+              setShowModal(false);
+              console.log(prizeData)
+            }}>
+              Save
+            </Button>
+          </Button.Group>
+        </Modal.Footer>
+      </>
     )
   }
+
+
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height" enabled>
@@ -1009,48 +1321,23 @@ export default function TabThreeScreen() {
               />
             }>
             {/* {editModal(prizeData)} */}
-            <Modal style={{ marginTop: '-10%' }} isOpen={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Content style={{ marginTop: kbOffset }}>
-          <Modal.CloseButton />
-          <ScrollView>
-            <Modal.Header bg='muted.100'>{prizeData.title}</Modal.Header>
-            <Modal.Body>
-              <Box>
-                <Center>
-                  {postImageThumb(prizeData)}
-                </Center>
-              </Box>
-              {myTextInput()}
-              {/* <Box>
-                <Text>Item Title:</Text>
-                <Input defaultValue={prizeData.title} onChangeText={(value => setTemp({ ...temp, title: value }))} />
-                <Text>Item Description:</Text>
-                <Input defaultValue={prizeData.description} onChangeText={(value) => setTemp({ ...temp, description: value })} />
-                <Text>Item Cost:</Text>
-                <Input defaultValue={`${prizeData.cost}`} onChangeText={(value) => setTemp({ ...temp, cost: value.replace(/[^0-9]/g, '') })} />
-              </Box> */}
-              {/* <Modal.Footer>
-                <Button.Group mt={5} space={2}>
-
-                  <Button variant="outline" colorScheme="blueGray" onPress={() => {
-                    setShowModal(false);
-                  }}>
-                    Cancel
-                  </Button>
-                  <Button onPress={() => {
-                    setShowModal(false);
-                    setPrize({ ...prizeData, title: temp.title, description: temp.description, cost: temp.cost })
-                    updatePrize();
-                  }}>
-                    Save
-                  </Button>
-                </Button.Group>
-              </Modal.Footer> */}
-              <Divider />
-            </Modal.Body>
-          </ScrollView>
-        </Modal.Content>
-      </Modal>
+            <Modal mx="auto" style={{ marginTop: '1%', width: "100%" }} isOpen={showModal} onClose={() => setShowModal(false)}>
+              <Modal.Content style={{ marginTop: kbOffset }}>
+                <Modal.CloseButton />
+                <ScrollView>
+                  <Modal.Header bg='muted.100'>{prizeData.title}</Modal.Header>
+                  <Modal.Body>
+                    <Box>
+                      <Center>
+                        {postImageThumb(prizeData)}
+                      </Center>
+                    </Box>
+                    {myTextInput()}
+                    <Divider />
+                  </Modal.Body>
+                </ScrollView>
+              </Modal.Content>
+            </Modal>
             <Example prizes={prizes} />
             <Prizes prizes={prizes} />
           </ScrollView>
@@ -1183,14 +1470,12 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: -85,
     marginTop: -90,
-    marginLeft: 35,
   },
   image4: {
     width: 51,
     resizeMode: 'contain',
     marginBottom: -85,
     marginTop: -90,
-    marginLeft: 10,
   },
 
   image5: {

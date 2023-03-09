@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView, TouchableOpacity } from "react-native";
+import { StyleSheet, ScrollView, ImageBackground, Image, Alert, Form, KeyboardAvoidingView, TouchableOpacity, Linking } from "react-native";
 import { NativeBaseProvider, View, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, AspectRatio, Button } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import posts from './sample2';
@@ -9,10 +9,12 @@ import { UserContext } from "./UserContext";
 import moment from "moment";
 import { toggleClass } from "dom-helpers";
 import * as SecureStore from 'expo-secure-store';
+import { FontDisplay } from "expo-font";
 
 export default function SettingsScreen() {
     const { value, setValue } = useContext(UserContext);
     const { navigation } = useNavigation();
+
 
     return (
         <NativeBaseProvider>
@@ -56,16 +58,28 @@ function Example(value) {
     const [formData, setData] = useState({});
     const [show, setShow] = useState(false);
     const [token, setToken] = useState('');
+    const [email, setEmail] = useState("");
 
-    async function getValueFor(key) {
+    // async function getValueFor(key) {
+    //     let result = await SecureStore.getItemAsync(key);
+    //     if (result !== null) {
+    //         setEmail(result);
+    //     }
+
+    // }
+    // getValueFor("username");
+
+    async function getValueFor(key, key2) {
         let result = await SecureStore.getItemAsync(key);
+        let result2 = await SecureStore.getItemAsync(key2);
         if (result) {
             setToken(result);
-        } else {
-            console.log('No values stored under that key.');
+        } if (result2) {
+            setEmail(result2);
         }
     }
-    getValueFor('token');
+    getValueFor("token", "adminEmail");
+
 
     function askDeleteUser(user) {
         if (user.admin) {
@@ -122,7 +136,6 @@ function Example(value) {
             .then(res => res.json())
             .then(res => {
                 if (res.success) {
-                    console.log(res);
                     navigation.navigate('Login');
                 }
             })
@@ -144,33 +157,62 @@ function Example(value) {
     }
 
     function passwordForm(show) {
+        const [passwordType, setPasswordType] = useState('password');
         if (show)
             return (
                 <>
-                    <Divider mt="5" />
-                    <Text mt="5">New Password</Text>
-                    <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, newPassword: value })} />
-                    <Text>Confirm Password</Text>
-                    <Input w="50%" type="password" onChangeText={(value) => setData({ ...formData, confirmPassword: value })} />
+                    <Text style={{ fontSize: 20, fontWeight: 'bold' }} mt="5">Set New Password</Text>
+                    <Divider width="70%" mt="2" />
+                    <Text mt="3" style={{ fontSize: 18, fontWeight: 'bold', color: "gray.800" }} >New Password</Text>
+                    <Input w="70%" type={passwordType} onChangeText={(value) => setData({ ...formData, newPassword: value })} />
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: "darkGray" }}>Confirm Password</Text>
+                    <Input w="70%" type={passwordType} onChangeText={(value) => setData({ ...formData, confirmPassword: value })} />
                     <TouchableOpacity>
-                    <Button m="3" backgroundColor="cyan.600" onPress={() => {
-                        if (formData.newPassword && formData.confirmPassword) {
-                            if (formData.newPassword === formData.confirmPassword && formData.newPassword.length > 7 && /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(formData.newPassword)) {
-                                passwordChange(formData.newPassword);
-                            } else {
-                                Alert.alert(
-                                    "Passwords must match",
-                                    "Password Must be at least 8 characters long and contain at least one number and one special character",
-                                    [
-                                        { text: "OK", onPress: () => console.log("OK Pressed") }
-                                    ]
-                                );
+                        <Button mx="auto"
+                            onPress={() => {
+                                if (passwordType === "password") {
+                                    setPasswordType("text");
+                                } else {
+                                    setPasswordType("password");
+                                }
+                            }}
+                            variant="link"
+                            _text={{
+                                fontSize: "xs",
+                                fontWeight: "medium",
+                                color: "coolGray.600",
+                                _dark: {
+                                    color: "warmGray.200",
+                                },
+                            }}
+                        >
+                            <Ionicons name="eye" size={13} color="#BCBCBC"> {passwordType === "password" ? "Show" : "Hide"} </Ionicons>
+                        </Button>
+                        <Button m="3" backgroundColor="cyan.600" onPress={() => {
+                            if (formData.newPassword && formData.confirmPassword) {
+                                if (formData.newPassword === formData.confirmPassword && formData.newPassword.length > 7 && /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(formData.newPassword)) {
+                                    passwordChange(formData.newPassword);
+                                } else {
+                                    Alert.alert(
+                                        "Passwords must match",
+                                        "Password Must be at least 8 characters long and contain at least one number and one special character",
+                                        [
+                                            { text: "OK", onPress: () => console.log("OK Pressed") }
+                                        ]
+                                    );
+                                }
                             }
-                        }
-                    }}
-                    >Submit</Button>
+                        }}
+                        >Save Password</Button>
                     </TouchableOpacity>
-                    <Divider />
+                    <Divider width="50%" mt="2" />
+                    <Center mt="1" mb="2">
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: "gray" }} >Password Requirements:</Text>
+                        <Text style={{ fontSize: 11, fontWeight: 'italic', color: "gray" }} >*Minimum of 8 characters</Text>
+                        <Text style={{ fontSize: 11, fontWeight: 'italic', color: "gray" }} >*One capitalized character</Text>
+                        <Text style={{ fontSize: 11, fontWeight: 'italic', color: "gray" }} >*One number character</Text>
+                        <Text style={{ fontSize: 11, fontWeight: 'italic', color: "gray" }} >*One special character</Text>
+                    </Center>
                 </>
             )
     }
@@ -275,7 +317,6 @@ function Example(value) {
                             My Account
                         </Heading>
                     </Center>
-                    <Divider />
                     <HStack space={2}>
                         <Heading size="sm" ml="-1">
                             Name:
@@ -339,17 +380,38 @@ function Example(value) {
                         </Heading>
                     </HStack>
                     <Divider />
+                    <Button shadow={2} mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="cyan.600"
+                        style={value.admin ? { display: "none" } : { display: "flex" }}
+                        onPress={() => Linking.openURL(`mailto:${email}
+                        ?subject=Crew Coin Support`)}
+                        title="support@crewcoin.app"
+                        subject="CrewCoin Support"
+                    >
+                        <HStack space={2}>
+                            <Ionicons name="mail-outline" color="#fff" size={22} />
+                            <Heading size="md" color="#fff" >
+                                Contact Administrator
+                            </Heading>
+                        </HStack>
+                    </Button>
+                    <TouchableOpacity>
+                        {/* light gray color */}
+                        <Button style={show ? { backgroundColor: "#BCBCBC" } : { display: "flex" }} shadow={2} mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="cyan.600" onPress={() => { toggleShow(show, setShow) }}><Heading size="md" color="#fff">
+                            {show ? "Cancel" : "Change My Password"}</Heading></Button>
+                    </TouchableOpacity>
                 </Stack>
                 <Center>
-                <TouchableOpacity>
-                    <Button shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { navigation.navigate('Login') }}><Heading>Log Out</Heading></Button>
-                    </TouchableOpacity>
+                    <Divider mb="4" style={value.admin ? { display: "none" } : { display: "flex" }} />
                     <TouchableOpacity>
-                    <Button shadow={2}  mt="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="amber.300" onPress={() => { toggleShow(show, setShow) }}><Heading>Change My Password</Heading></Button>
+                        <Button
+                            // if show is true then hide button
+                            style={show ? { display: "none" } : { display: "flex" }}
+                            shadow={2} border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="cyan.600" onPress={() => { navigation.navigate('Login') }}><Heading size="md"color="#fff">Log Out</Heading></Button>
                     </TouchableOpacity>
+                    <Divider style={show ? { display: "none" } : { display: "flex" }} mt="4" width="40%" />
                     {passwordForm(show)}
                     <TouchableOpacity>
-                    <Button shadow={2} mt="4" mb="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="muted.300" onPress={() => { askDeleteUser(value) }}><Heading>Delete My Account</Heading></Button>
+                        <Button style={show ? { display: "none" } : { display: "flex" }} shadow={2} mt="4" mb="4" border="1" borderColor="gray.400" borderTopRadius="10" borderBottomRadius="10" backgroundColor="muted.500" onPress={() => { askDeleteUser(value) }}><Heading color="#fff" size="md">Delete My Account</Heading></Button>
                     </TouchableOpacity>
                 </Center>
             </Box>

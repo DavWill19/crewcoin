@@ -147,8 +147,8 @@ export default function HistoryScreen({ route, navigation }) {
                 renderItem={({ item }) =>
                     <Box
                         shadow={2}
-                        mt="2"
-                        mb="2"
+                        mt="1"
+                        mb="1"
 
                         maxW="100%"
                         rounded="lg"
@@ -167,13 +167,13 @@ export default function HistoryScreen({ route, navigation }) {
                             backgroundColor: "white",
                         }}
                     >   <Center>
-                            <Stack w="350" p="2" mx="3" space={3} maxW="95%">
+                            <Stack w="350" p="2" mx="4" space={3} maxW="95%">
                                 <Stack maxW="95%" space={2}>
                                     <Center>
                                         <Text
 
                                             mt="-3"
-                                            color="gray.900"
+                                            color="gray.700"
                                             _dark={{
                                                 color: "warmGray.200",
                                             }}
@@ -194,23 +194,23 @@ export default function HistoryScreen({ route, navigation }) {
                                             <Text
                                                 italic="true"
                                                 mt="-3"
-                                                color="gray.900"
+                                                color="gray.700"
                                                 _dark={{
                                                     color: "warmGray.200",
                                                 }}
                                                 fontWeight="500"
-                                                fontSize={17}
+                                                fontSize="md"
                                             >
                                                 Comments:
                                             </Text>
                                             <Text
                                                 textAlign="center"
-                                                color="gray.900"
+                                                color="gray.700"
                                                 _dark={{
                                                     color: "warmGray.200",
                                                 }}
                                                 fontWeight="400"
-                                                fontSize="lg"
+                                                fontSize="md"
                                                 italic="true"
                                                 bold="true"
                                             >

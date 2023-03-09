@@ -18,6 +18,7 @@ import { useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import * as Notifications from "expo-notifications"
 import * as Permissions from "expo-permissions"
+import { Ionicons } from "@expo/vector-icons";
 
 Notifications.setNotificationHandler({
     handleNotification: async () => {
@@ -33,6 +34,7 @@ export const Signup = () => {
     const [formData, setData] = React.useState({});
     const [user, setUser] = React.useState({});
     const [isLoading, setIsLoading] = React.useState(false);
+    const [passwordType, setPasswordType] = React.useState("password");
     //loading spinner
     function Spinner() {
         if (isLoading) {
@@ -100,7 +102,7 @@ export const Signup = () => {
         //     .catch(err => {
         //         return null
         //     })
-            registerForPushNotificationsAsync();
+        registerForPushNotificationsAsync();
     }, [])
 
 
@@ -140,12 +142,32 @@ export const Signup = () => {
                         </FormControl>
                         <FormControl>
                             <FormControl.Label>Password</FormControl.Label>
-                            <Input placeholder="Password" type="password" onChangeText={(value) => setData({ ...formData, password: value })} />
+                            <Input placeholder="Password" type={passwordType} onChangeText={(value) => setData({ ...formData, password: value })} />
                         </FormControl>
                         <FormControl>
                             <FormControl.Label>Confirm Password</FormControl.Label>
-                            <Input placeholder="Confirm Password" type="password" onChangeText={(value) => setData({ ...formData, confirmpassword: value })} />
+                            <Input placeholder="Confirm Password" type={passwordType} onChangeText={(value) => setData({ ...formData, confirmpassword: value })} />
                         </FormControl>
+                        <Button mt="-2" mb="-5"  mx="auto"
+                            onPress={() => {
+                                if (passwordType === "password") {
+                                    setPasswordType("text");
+                                } else {
+                                    setPasswordType("password");
+                                }
+                            }}
+                            variant="link"
+                            _text={{
+                                fontSize: "xs",
+                                fontWeight: "medium",
+                                color: "coolGray.600",
+                                _dark: {
+                                    color: "warmGray.200",
+                                },
+                            }}
+                        >
+                           <Ionicons name="eye" size={12} color="#BCBCBC"> {passwordType === "password" ? "Show" : "Hide"} </Ionicons>
+                        </Button>
                         <FormControl>
                             <FormControl.Label>Phone</FormControl.Label>
                             <Input placeholder="Phone" onChangeText={(value) => setData({ ...formData, phone: value })} />

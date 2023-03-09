@@ -9,13 +9,32 @@ import { Component, useContext, useEffect } from "react";
 import { UserContext } from "./UserContext";
 import React from "react";
 import * as SecureStore from 'expo-secure-store';
+import { set } from "react-native-reanimated";
 
 export default function SendScreen() {
     const [formData, setData] = React.useState({});
     const { value, setValue } = useContext(UserContext);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [activeIndex, setActiveIndex] = React.useState(null);
 
-
+    const toggleActive = (index) => {
+        setActiveIndex(index);
+      };
+      const toggleActiveStyles = (index) => {
+        if (index === activeIndex) {
+          return 'current__events__hot-price disabled';
+        } else {
+          return 'current__events__hot-price';
+        }
+      };
+    
+      const toggleActiveStylesBtns = (index) => {
+        if (index === activeIndex) {
+          return 'gray';
+        } else {
+          return 'blue';
+        }
+      };
     function Spinner() {
         if (isLoading) {
             return (
@@ -243,12 +262,14 @@ export default function SendScreen() {
         //set users for send screen minus current user
 
         let user = userData.filter(el => el.username !== value.username);
+        
 
         //map users list to send screen
         return (
-            user.map((user) => {
+            user.map((user, index) => {
                 const userId = user._id;
                 const username = user.username;
+                var disabled = user.disabled;
                 //send push notification
                 const triggerPushNotificationHandler = (token, title, body) => {
                     fetch("https://exp.host/--/api/v2/push/send", {
@@ -280,6 +301,8 @@ export default function SendScreen() {
                 function handleReceive(navigation, user, formData, self, userId) {
                     const coinincrease = formData[userId + username];
                     const amount = coinincrease + user.balance;
+
+                    disabled = true;
                     const newComment = () => {
                         if (formData[userId] == undefined) {
                             return "";
@@ -453,9 +476,12 @@ export default function SendScreen() {
                                         }} />
 
                                         <Button ml="3"
-                                            backgroundColor="cyan.600"
+                                        disabled={activeIndex === index}
+                                            backgroundColor={activeIndex === index ? "gray.300" : "cyan.500"}
                                             onPress={() => {
+                                                toggleActive(index);
                                                 (handleReceive(navigation, user, formData, self, userId));
+                                                disabled = true;
 
 
                                             }}>Send</Button>

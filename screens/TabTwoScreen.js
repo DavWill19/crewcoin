@@ -1,5 +1,5 @@
 import { StyleSheet, View, ImageBackground, TouchableOpacity, Alert, KeyboardAvoidingView, FlatList, RefreshControl } from "react-native";
-import { NativeBaseProvider, PresenceTransition, Image, Button, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, VStack, AspectRatio } from 'native-base';
+import { NativeBaseProvider, PresenceTransition, Image, Button, Input, Center, Text, Box, Heading, Header, Divider, Stack, HStack, VStack, AspectRatio, Spacer } from 'native-base';
 import { Ionicons } from '@expo/vector-icons';
 import posts from './sample2';
 import { Component, useContext, useEffect, useState, useMemo, useCallback } from "react";
@@ -24,6 +24,7 @@ export default function TabTwoScreen() {
   const [userData, setUser] = useState([]);
   const [token2, setToken] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [disable, setDisable] = useState(false);
 
   const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -340,7 +341,8 @@ export default function TabTwoScreen() {
                 // Handle any errors
               })
             setIsLoading(false);
-          }, 4000);
+            setDisable(false);
+          }, 3000);
         } else {
           setTimeout(() => {
             setIsLoading(true);
@@ -387,6 +389,7 @@ export default function TabTwoScreen() {
                 )
               });
             setIsLoading(false);
+            setDisable(false);
           }, 1000);
         }
       }
@@ -464,49 +467,55 @@ export default function TabTwoScreen() {
               duration: 2500
             }
           }}> */}
-            <Box
-              shadow={2}
-              mt="2"
-              mb="2"
-              pt="2"
-              style={styles.image2}
-              maxW="360"
-              rounded="lg"
-              overflow="hidden"
-              borderColor="gray.300"
-              borderWidth="1"
-              _dark={{
-                borderColor: "gray.900",
-                backgroundColor: "gray.900",
-              }}
-              _web={{
-                shadow: 2,
-                borderWidth: 0,
-              }}
-              _light={{
-                backgroundColor: "gray.50",
-              }}
-            >
-              <Stack w="100%" px="5" py="3" space={3}>
-                <HStack alignItems="center">
-                  <Heading size="md" ml="-1" >
-                    New Announcement
-                  </Heading>
+          <Box
+            shadow={2}
+            mt="1"
+            mb="1"
+            pt="2"
+            style={styles.image2}
+            mx="auto"
+            maxW="98%"
+            rounded="lg"
+            overflow="hidden"
+            borderColor="gray.300"
+            borderWidth="1"
+            _dark={{
+              borderColor: "gray.900",
+              backgroundColor: "gray.900",
+            }}
+            _web={{
+              shadow: 2,
+              borderWidth: 0,
+            }}
+            _light={{
+              backgroundColor: "gray.50",
+            }}
+          >
+            <Stack w="100%" px="5" py="3" space={3}>
+              <HStack space={4}>
+                <Heading size="md" ml="-1" >
+                  New Announcement
+                </Heading>
+                <Spacer />
+                <Center>
                   <TouchableOpacity onPress={() => { getImageFromCamera() }}>
                     <Image mt="4" alt="camera1" style={styles.image3} source={require('../assets/images/camera1.png')} resizeMode="contain" />
                   </TouchableOpacity>
+                </Center>
+                <Center>
                   <TouchableOpacity onPress={() => { getImageFromGallery() }}>
                     <Image mt="4" alt="camera2" style={styles.image4} source={require('../assets/images/camera.png')} resizeMode="contain" />
                   </TouchableOpacity>
-                </HStack>
-                <Center>
-                  {memoizedTempImage}
                 </Center>
-                <Input value={textData.title} onChangeText={(value) => setText({ ...textData, title: value })} placeholder="Title" />
-                <Input multiline={true} value={textData.announcement} onChangeText={(value) => setText({ ...textData, announcement: value })} placeholder="Announcement" />
-                <Button backgroundColor="cyan.500" shadow={3} onPress={() => { handlePost() }}> Post </Button>
-              </Stack>
-            </Box>
+              </HStack>
+              <Center>
+                {memoizedTempImage}
+              </Center>
+              <Input value={textData.title} onChangeText={(value) => setText({ ...textData, title: value })} placeholder="Title" />
+              <Input multiline={true} value={textData.announcement} onChangeText={(value) => setText({ ...textData, announcement: value })} placeholder="Announcement" />
+              <Button disabled={disable} backgroundColor="cyan.500" shadow={3} onPress={() => { setDisable(true); handlePost() }}> Post </Button>
+            </Stack>
+          </Box>
           {/* </PresenceTransition> */}
         </>
 
@@ -521,6 +530,7 @@ export default function TabTwoScreen() {
     const [postData, setPost] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     console.log("posts rendered")
+    const [extra, setExtra] = useState(0);
 
     useEffect(() => {
       setIsLoading(true);
@@ -576,7 +586,7 @@ export default function TabTwoScreen() {
     function deleteButton(posts) {
       if (value.admin) {
         return (
-          <Button shadow={2} colorScheme="rose" onPress={() => {
+          <Button py="2" px="2" shadow={2} colorScheme="r" onPress={() => {
             Alert.alert(
               "Remove Post",
               "Are you sure you want to remove this post?",
@@ -607,11 +617,11 @@ export default function TabTwoScreen() {
     function views(item) {
       if (item.views) {
         return (
-          <Text shadow={2} style={styles.text4}>: {item.views.length} Views</Text>
+          <Text shadow={2} style={styles.text4}> {item.views.length} Views</Text>
         )
       } else {
         return (
-          <Text shadow={2} style={styles.text4}>: 0 Views</Text>
+          <Text shadow={2} style={styles.text4}> 0 Views</Text>
         )
       }
     }
@@ -752,12 +762,100 @@ export default function TabTwoScreen() {
           });
       }
     }
+    function likeItem(item, index) {
+      // if (item.likes && !item.likes.includes(value)) {
+      if (item.likes && !item.likes.includes(value.firstname + " " + value.lastname)) {
+        setPosts(postsData => {
+          postsData[index].likes.push(value.firstname + " " + value.lastname)
+          return postsData
+        })
+      } else if (!item.likes) {
+        setPosts(postsData => {
+          postsData[index].likes = [value.firstname + " " + value.lastname]
+          return postsData
+        })
+      }
+      setPosts(postsData)
+      setExtra(extra + 1)
+      console.log(postsData[index].likes)
+      fetch(`https://crewcoin.herokuapp.com/announcements/likes`, {
+        method: "PUT",
+        headers: {
+          authorization: "jwt",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "prizeId": item._id,
+          "user": `${value.firstname} ${value.lastname}`,
+
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            console.log("success- updated likes")
+          } else {
+            console.log("error")
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        });
+    }
+    function unLikeItem(item, index) {
+      if (item.likes && item.likes.includes(value.firstname + " " + value.lastname)) {
+        setPosts(postsData => {
+          // remove the item from the array
+          postsData[index].likes.splice(postsData[index].likes.indexOf(value.firstname + " " + value.lastname), 1)
+          return postsData
+        })
+      } else if (!item.likes) {
+        setPosts(postsData => {
+          postsData[index].likes = []
+          return postsData
+        })
+      }
+      setPosts(postsData)
+      setExtra(extra + 1)
+      console.log(postsData[index].likes)
+      fetch(`https://crewcoin.herokuapp.com/announcements/unlikes`, {
+        method: "PUT",
+        headers: {
+          authorization: "jwt",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          mode: "cors"
+        },
+        body: JSON.stringify({
+          "prizeId": item._id,
+          "user": `${value.firstname} ${value.lastname}`,
+
+        }),
+      })
+
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            console.log("success- updated likes")
+          } else {
+            console.log("error")
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        });
+    }
+
+
     function showImage(item) {
       if (item.image) {
         return (
           <Image
             shadow={9}
-            style={{ width: 300, height: 300, borderRadius: 5, resizeMode: 'contain' }}
+            style={{ width: 350, height: 350, padding: 5, borderRadius: 5, resizeMode: 'contain' }}
             alt="image"
             source={{ uri: item.image }}
           />
@@ -770,14 +868,12 @@ export default function TabTwoScreen() {
       if (item.views) {
         // list viewers
         let viewers = item.views.map((viewer, index) => {
-          return (
-            <Text key={index}>{viewer}</Text>
-          )
+          return (" " + viewer)
         })
         console.log(item.views)
         Alert.alert(
-          "Viewed by:",
-          `${item.views}`,
+          "👀",
+          `${viewers}`,
         );
       } else {
         return (
@@ -785,83 +881,131 @@ export default function TabTwoScreen() {
         )
       }
     }
+    function showLikers(item) {
+      if (item.likes) {
+        // list viewers
+        let likers = item.likes.map((liker, index) => {
+          return (" " + liker)
+        })
+        console.log(item.likes)
+        Alert.alert(
+          "❤️",
+          `${likers} `,
+        );
+      } else {
+        return (
+          null
+        )
+      }
+    }
+    function likeButton(item, index) {
+      if (item.likes && item.likes.includes(value.firstname + " " + value.lastname)) {
+        return (
+          <TouchableOpacity onPress={() => { unLikeItem(item, index) }} >
+            <Ionicons mt={1} name="heart" size={28} color="#DC243C" />
+          </TouchableOpacity>
+        )
+      } else {
+        return (
+          <TouchableOpacity onPress={() => { likeItem(item, index) }} >
+            <Ionicons mt="2" name="heart-outline" size={28} color="#605D5D" />
+          </TouchableOpacity>
+        )
+      }
+    }
+    function showLikes(item) {
+      if (item.likes && item.likes.length > 0) {
+        return (
+          <Text>{item.likes.length}         </Text>
+        )
+      }
+      else {
+        return null;
+      }
+    }
     return (
       <>
         <FlatList
+          extraData={postsData}
           refreshing={refreshing}
           onRefresh={onRefresh}
           data={postsData}
-          renderItem={({ item, index }) =>
-            // <PresenceTransition visible initial={{
-            //   opacity: 0
-            // }} animate={{
-            //   opacity: 1,
-            //   transition: {
-            //     duration: 2050
-            //   }
-            // }}>
-              <Box
-                pt="5"
-                shadow={2}
-                style={styles.image2}
-                mb="2"
-                maxW="360"
-                rounded="lg"
-                overflow="hidden"
-                borderColor="gray.300"
-                borderWidth="1"
-                _dark={{
-                  borderColor: "gray.900",
-                  backgroundColor: "gray.900",
-                }}
-                _web={{
-                  shadow: 2,
-                  borderWidth: 0,
-                }}
-                _light={{
-                  backgroundColor: "gray.50",
-                }}
-              >
-                <Box pt="0">
-                  {showImage(item)}
-                  {sendViews(item)}
-                </Box>
-                <Stack w="330" p="1" space={3}>
-                  <Stack>
-                    <Center>
-                      <Heading size="lg">
-                        {item.title}
-                      </Heading>
-                    </Center>
-                  </Stack>
-                  <Divider />
-                  <Text fontWeight="400" fontSize={17}>
-                    {item.description}
-                  </Text>
-                  <Divider />
-                  <HStack alignItems="center" space={2} justifyContent="space-between">
-                    <HStack alignItems="center">
-                      <Text
-                        color="yellow.600"
-                        _dark={{
-                          color: "warmGray.200",
-                        }}
-                        fontWeight="400"
-                        bold="true"
-                      >
-                        {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
-                      </Text>
-                    </HStack>
-                    {deleteButton(item)}
-                  </HStack>
-                  <Divider />
-                </Stack>
-                <HStack>
-                  <Ionicons onPress={() => { showViewers(item) }} name="eye-outline" size={18} color="#BCBCBC" />
-                  <Text onPress={() => { showViewers(item) }} mb={2} fontSize={13} color="#BCBCBC" ml="1">{views(item)}</Text>
-                </HStack>
+          renderItem={({ item, index, postsData }) =>
+            <Box
+              pt="5"
+              shadow={2}
+              style={styles.image2}
+              mb="2"
+              mx="auto"
+              maxW="98%"
+              rounded="lg"
+              overflow="hidden"
+              borderColor="gray.300"
+              borderWidth="1"
+              _dark={{
+                borderColor: "gray.900",
+                backgroundColor: "gray.900",
+              }}
+              _web={{
+                shadow: 2,
+                borderWidth: 0,
+              }}
+              _light={{
+                backgroundColor: "gray.50",
+              }}
+            >
+              <Stack>
+                <Center>
+                  <Heading size="lg">
+                    {item.title}
+                  </Heading>
+                </Center>
+              </Stack>
+              <Box pt="2">
+                {showImage(item)}
+                {sendViews(item)}
               </Box>
-            // </PresenceTransition>
+              <Stack w="330" p="1" space={3}>
+                {/* <Stack>
+                    <Heading size="lg">
+                      {item.title}
+                    </Heading>
+                </Stack> */}
+                <Divider />
+                <Text fontWeight="400" fontSize={17}>
+                  {item.description}
+                </Text>
+                <Divider />
+                <HStack alignItems="center" space={2} justifyContent="space-between">
+                  <HStack alignItems="center">
+                    <Text
+                      color="yellow.600"
+                      _dark={{
+                        color: "warmGray.200",
+                      }}
+                      fontWeight="400"
+                      bold="true"
+                    >
+                      {moment(item.updatedAt).format("MM/DD/YYYY h:mma")}
+                    </Text>
+                  </HStack>
+                  {deleteButton(item)}
+                </HStack>
+                <Divider />
+              </Stack>
+              <HStack mb={2} width={"315"}>
+                {likeButton(item, index)}
+                <TouchableOpacity style={{ marginRight: "auto" }} onPress={() => { showLikers(item) }} >
+                  <Text mb={0} fontSize={13} color="#6E6C6C" mt="1" ml="1">{showLikes(item)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { showViewers(item) }} >
+                  {/* <Ionicons pt="3" name="eye-outline" size={20} color="#6E6C6C" /> */}
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { showViewers(item) }} >
+                  <Text fontSize={13} mt="1" color="#6E6C6C" ml="1">{views(item)}</Text>
+                </TouchableOpacity>
+              </HStack>
+            </Box>
           }
           ListHeaderComponent={() => Post()}
           keyExtractor={item => item._id}
@@ -887,7 +1031,7 @@ export default function TabTwoScreen() {
                 duration: 1050
               }
             }}> */}
-              <Posts />
+            <Posts />
             {/* </PresenceTransition> */}
           </View>
         </ImageBackground>
@@ -978,14 +1122,12 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: -85,
     marginTop: -90,
-    marginLeft: 35,
   },
   image4: {
     width: 51,
     resizeMode: 'contain',
     marginBottom: -85,
     marginTop: -90,
-    marginLeft: 10,
   },
   title: {
     width: 400,
