@@ -28,16 +28,15 @@
         "UIUserInterfaceStyle": "Light"
       },
       "bundleIdentifier": "com.davwill19.crewcoin",
-      "buildNumber": "6"
+      "buildNumber": "7"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 21,
+      "versionCode": 23,
       "package": "com.davwill19.crewcoin"
     },
     "web": {

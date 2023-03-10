@@ -10,8 +10,7 @@ import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import * as Notifications from "expo-notifications"
 import * as Permissions from "expo-permissions"
 import * as SecureStore from 'expo-secure-store';
-// import { TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
-// import { AdMobBanner } from 'expo-ads-admob';
+
 
 
 Notifications.setNotificationHandler({
