@@ -2,7 +2,7 @@
   "expo": {
     "name": "Crew Coin",
     "slug": "crew-coin",
-    "version": "21.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "myapp",
@@ -28,7 +28,7 @@
         "UIUserInterfaceStyle": "Light"
       },
       "bundleIdentifier": "com.davwill19.crewcoin",
-      "buildNumber": "7"
+      "buildNumber": "22"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
@@ -36,7 +36,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 23,
+      "versionCode": 24,
       "package": "com.davwill19.crewcoin"
     },
     "web": {
